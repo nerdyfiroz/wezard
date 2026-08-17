@@ -234,21 +234,12 @@ export function TaskItem({
       {hasProofBox && (
         <div className="px-4 pb-4 sm:px-5 sm:pb-5">
           <div
-            className={`rounded-xl border p-3.5 transition-all ${
+            className={`rounded-xl border p-2.5 transition-all ${
               proofValue.trim().length > 1
                 ? "border-cyan-400/40 bg-cyan-500/5"
                 : "border-fintech-border/60 bg-obsidian-light/40"
             }`}
           >
-            <label className="flex items-center gap-1.5 text-xs font-mono font-semibold mb-2 text-slate-200">
-              <Link2 className="w-3.5 h-3.5 text-cyan-400" />
-              <span className="text-cyan-300 font-bold">{proofLabelText}</span>
-              {task.proofRequired && (
-                <span className="ml-1 px-1.5 py-0.5 rounded text-[9px] bg-cyan-400/10 text-cyan-400 border border-cyan-400/30 font-bold">
-                  REQUIRED
-                </span>
-              )}
-            </label>
             <input
               type="text"
               value={proofValue}
