@@ -1,16 +1,16 @@
 "use client";
 
 import React from "react";
-import { CheckCircle2, ExternalLink, Twitter, Sparkles, Circle, Globe, Wallet } from "lucide-react";
+import { Check, ExternalLink, Twitter, Sparkles, Globe, Wallet } from "lucide-react";
 import { Task } from "@/lib/db/schema";
 
 interface TaskItemProps {
   task: Task;
   isCompleted: boolean;
-  onToggleComplete: (taskId: string) => void;
+  onVisitTask: (taskId: string, url?: string | null) => void;
 }
 
-export function TaskItem({ task, isCompleted, onToggleComplete }: TaskItemProps) {
+export function TaskItem({ task, isCompleted, onVisitTask }: TaskItemProps) {
   const getIcon = () => {
     switch (task.type) {
       case "x_follow":
@@ -20,51 +20,48 @@ export function TaskItem({ task, isCompleted, onToggleComplete }: TaskItemProps)
       case "visit_url":
         return <Globe className="w-4 h-4 text-purple-400" />;
       case "submit_wallet":
-        return <Wallet className="w-4 h-4 text-fintech-green" />;
+        return <Wallet className="w-4 h-4 text-amber-400" />;
       default:
-        return <Sparkles className="w-4 h-4 text-arcane-gold" />;
+        return <Sparkles className="w-4 h-4 text-amber-400" />;
     }
   };
 
-  const handleActionClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (task.url) {
-      window.open(task.url, "_blank", "noopener,noreferrer");
-    }
+  const handleAction = () => {
+    onVisitTask(task.id, task.url);
   };
 
   return (
     <div
-      onClick={() => onToggleComplete(task.id)}
+      onClick={handleAction}
       className={`group relative p-4 rounded-xl border transition-all duration-200 cursor-pointer flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
         isCompleted
-          ? "bg-fintech-green/10 border-fintech-green/40 shadow-sm shadow-fintech-green/5"
-          : "bg-fintech-card/80 border-fintech-border hover:border-fintech-green/30 hover:bg-fintech-card"
+          ? "bg-amber-500/10 border-amber-400/40 shadow-sm shadow-amber-500/10"
+          : "bg-fintech-card/80 border-fintech-border hover:border-amber-400/40 hover:bg-fintech-card"
       }`}
     >
       <div className="flex items-start gap-3.5">
         <div
-          className={`mt-0.5 w-8 h-8 rounded-lg flex items-center justify-center shrink-0 border ${
+          className={`mt-0.5 w-8 h-8 rounded-lg flex items-center justify-center shrink-0 border font-pixel ${
             isCompleted
-              ? "bg-fintech-green text-obsidian border-fintech-green"
-              : "bg-obsidian-light text-slate-400 border-fintech-border group-hover:border-fintech-green/30"
+              ? "bg-gradient-to-r from-amber-300 to-amber-500 text-obsidian border-amber-400 font-bold shadow-md shadow-amber-400/20"
+              : "bg-obsidian-light text-slate-400 border-fintech-border group-hover:border-amber-400/30"
           }`}
         >
-          {isCompleted ? <CheckCircle2 className="w-5 h-5 stroke-[2.5]" /> : getIcon()}
+          {isCompleted ? <Check className="w-5 h-5 stroke-[3]" /> : getIcon()}
         </div>
 
         <div className="flex flex-col">
           <div className="flex items-center gap-2 flex-wrap">
             <h4
               className={`font-display font-semibold text-sm ${
-                isCompleted ? "text-slate-200 line-through opacity-80" : "text-white"
+                isCompleted ? "text-amber-200" : "text-white"
               }`}
             >
               {task.title}
             </h4>
 
             {task.required ? (
-              <span className="px-2 py-0.5 text-[10px] font-mono font-semibold rounded bg-emerald-500/10 text-fintech-green border border-fintech-green/20">
+              <span className="px-2 py-0.5 text-[10px] font-mono font-semibold rounded bg-amber-400/10 text-amber-300 border border-amber-400/30">
                 REQUIRED
               </span>
             ) : (
@@ -74,46 +71,29 @@ export function TaskItem({ task, isCompleted, onToggleComplete }: TaskItemProps)
             )}
           </div>
 
-          <p className="text-xs text-fintech-subtext mt-1 leading-relaxed">{task.description}</p>
+          <p className="text-xs text-fintech-subtext mt-1 leading-relaxed font-pixel">{task.description}</p>
         </div>
       </div>
 
       <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
-        {task.url && (
+        {isCompleted ? (
+          <div className="px-3.5 py-1.5 rounded-lg text-xs font-mono font-bold bg-amber-400/20 text-amber-300 border border-amber-400/40 flex items-center gap-1.5 shadow-sm shadow-amber-400/10">
+            <span className="font-pixel text-sm">✓</span>
+            <span>Completed</span>
+          </div>
+        ) : (
           <button
             type="button"
-            onClick={handleActionClick}
-            className="px-3 py-1.5 rounded-lg text-xs font-mono bg-obsidian-light hover:bg-slate-800 text-slate-300 hover:text-white border border-fintech-border transition-colors flex items-center gap-1"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleAction();
+            }}
+            className="px-3.5 py-1.5 rounded-lg text-xs font-mono font-bold bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-500 hover:from-yellow-300 hover:to-amber-400 text-obsidian border border-amber-400/40 transition-all flex items-center gap-1.5 shadow-sm shadow-amber-500/20"
           >
-            <span>Open Link</span>
-            <ExternalLink className="w-3 h-3 text-slate-400" />
+            <span>{task.url ? "Open Link" : "Complete Task"}</span>
+            {task.url && <ExternalLink className="w-3.5 h-3.5 stroke-[2.5]" />}
           </button>
         )}
-
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            onToggleComplete(task.id);
-          }}
-          className={`px-3 py-1.5 rounded-lg text-xs font-semibold tracking-wider transition-all flex items-center gap-1.5 ${
-            isCompleted
-              ? "bg-fintech-green text-obsidian font-bold"
-              : "bg-fintech-card text-slate-300 border border-fintech-border hover:border-fintech-green/40 hover:text-white"
-          }`}
-        >
-          {isCompleted ? (
-            <>
-              <CheckCircle2 className="w-3.5 h-3.5" />
-              <span>Completed</span>
-            </>
-          ) : (
-            <>
-              <Circle className="w-3.5 h-3.5 text-slate-500" />
-              <span>Mark Done</span>
-            </>
-          )}
-        </button>
       </div>
     </div>
   );

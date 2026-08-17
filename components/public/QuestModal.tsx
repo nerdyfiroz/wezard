@@ -17,7 +17,7 @@ interface QuestModalProps {
 
 export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [completedTaskIds, setCompletedTaskIds] = useState<string[]>([]);
+  const [visitedTaskIds, setVisitedTaskIds] = useState<string[]>([]);
   const [walletAddress, setWalletAddress] = useState("");
   const [twitterUsername, setTwitterUsername] = useState("");
   const [replyCommentLink, setReplyCommentLink] = useState("");
@@ -48,11 +48,28 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
     }
   };
 
-  const toggleTaskCompletion = (taskId: string) => {
-    setCompletedTaskIds((prev) =>
-      prev.includes(taskId) ? prev.filter((id) => id !== taskId) : [...prev, taskId]
-    );
+  const handleVisitTask = (taskId: string, url?: string | null) => {
+    if (url) {
+      window.open(url, "_blank", "noopener,noreferrer");
+    }
+    setVisitedTaskIds((prev) => (prev.includes(taskId) ? prev : [...prev, taskId]));
   };
+
+  // Determine completed task IDs:
+  // 1. Tasks visited via "Open Link"
+  // 2. Submit wallet tasks (automatically completed when wallet, twitter username, and reply link are filled)
+  const isFormFilled = Boolean(
+    walletAddress && evmAddressRegex.test(walletAddress) && twitterUsername.trim() && replyCommentLink.trim()
+  );
+
+  const completedTaskIds = tasks
+    .filter((t) => {
+      if (t.type === "submit_wallet") {
+        return isFormFilled;
+      }
+      return visitedTaskIds.includes(t.id);
+    })
+    .map((t) => t.id);
 
   // Required Tasks enforcement
   const requiredTasks = tasks.filter((t) => t.required && t.active);
@@ -80,7 +97,7 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
     }
 
     if (!isAllRequiredCompleted) {
-      setErrorMsg("You must complete 100% of the required quests before submitting.");
+      setErrorMsg("Please click 'Open Link' on all required quest links above before submitting.");
       return;
     }
 
@@ -126,7 +143,7 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-obsidian/90 backdrop-blur-xl overflow-y-auto">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-obsidian/90 backdrop-blur-xl overflow-y-auto font-pixel">
         <motion.div
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -137,8 +154,8 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
           <div className="p-5 sm:p-6 border-b border-fintech-border flex items-center justify-between bg-obsidian-light/60">
             <div>
               <h3 className="font-display font-bold text-xl text-white">WeZards Whitelist Quests</h3>
-              <p className="text-xs text-fintech-subtext mt-0.5">
-                Complete all required quests to reserve your circle placement.
+              <p className="text-xs text-fintech-subtext mt-0.5 font-pixel">
+                Visit required links and submit your details to reserve your placement.
               </p>
             </div>
             <button
@@ -152,7 +169,7 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
           <form onSubmit={handleSubmit} className="p-5 sm:p-6 space-y-6 max-h-[75vh] overflow-y-auto">
             {/* Error Banner */}
             {errorMsg && (
-              <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs flex items-center gap-3">
+              <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs flex items-center gap-3 font-pixel">
                 <AlertCircle className="w-5 h-5 shrink-0" />
                 <span>{errorMsg}</span>
               </div>
@@ -161,13 +178,13 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
             {/* User Input Submission Details */}
             <div className="space-y-4">
               <h4 className="text-xs font-mono font-semibold uppercase tracking-wider text-amber-300">
-                1. Submission Details
+                1. Required Submission Details
               </h4>
 
               <div className="space-y-4">
                 {/* EVM Wallet */}
                 <div>
-                  <label className="block text-xs text-slate-300 font-medium mb-1.5">
+                  <label className="block text-xs text-slate-300 font-medium mb-1.5 font-pixel">
                     EVM Wallet Address <span className="text-amber-400">*</span>
                   </label>
                   <div className="relative">
@@ -187,7 +204,7 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
 
                 {/* Twitter / X Username */}
                 <div>
-                  <label className="block text-xs text-slate-300 font-medium mb-1.5">
+                  <label className="block text-xs text-slate-300 font-medium mb-1.5 font-pixel">
                     X / Twitter Username <span className="text-amber-400">*</span>
                   </label>
                   <div className="relative">
@@ -200,14 +217,14 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
                       placeholder="@yourusername"
                       value={twitterUsername}
                       onChange={(e) => setTwitterUsername(e.target.value)}
-                      className="w-full pl-9 pr-4 py-2.5 bg-obsidian-light border border-fintech-border rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 transition-colors font-sans"
+                      className="w-full pl-9 pr-4 py-2.5 bg-obsidian-light border border-fintech-border rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 transition-colors font-pixel"
                     />
                   </div>
                 </div>
 
                 {/* Reply or Comment Link */}
                 <div>
-                  <label className="block text-xs text-slate-300 font-medium mb-1.5">
+                  <label className="block text-xs text-slate-300 font-medium mb-1.5 font-pixel">
                     Reply or Comment Link <span className="text-amber-400">*</span>
                   </label>
                   <div className="relative">
@@ -227,7 +244,7 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
 
                 {/* Email (Optional) */}
                 <div>
-                  <label className="block text-xs text-slate-300 font-medium mb-1.5">
+                  <label className="block text-xs text-slate-300 font-medium mb-1.5 font-pixel">
                     Email Address <span className="text-slate-500 text-[10px]">(Optional)</span>
                   </label>
                   <div className="relative">
@@ -239,7 +256,7 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
                       placeholder="wizard@domain.com"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="w-full pl-9 pr-4 py-2.5 bg-obsidian-light border border-fintech-border rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 transition-colors font-sans"
+                      className="w-full pl-9 pr-4 py-2.5 bg-obsidian-light border border-fintech-border rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 transition-colors font-pixel"
                     />
                   </div>
                 </div>
@@ -249,7 +266,7 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
             {/* Quests Task List & Progress Bar */}
             <div className="space-y-3 pt-2">
               <h4 className="text-xs font-mono font-semibold uppercase tracking-wider text-amber-300">
-                2. Whitelist Quests
+                2. Whitelist Quests (Click "Open Link" to complete)
               </h4>
 
               <ProgressBar completedCount={completedRequiredCount} totalCount={requiredTasks.length} />
@@ -260,13 +277,13 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
                     key={task.id}
                     task={task}
                     isCompleted={completedTaskIds.includes(task.id)}
-                    onToggleComplete={toggleTaskCompletion}
+                    onVisitTask={handleVisitTask}
                   />
                 ))}
               </div>
             </div>
 
-            {/* Math CAPTCHA Widget */}
+            {/* 2-Number Math CAPTCHA Widget */}
             <MathCaptchaWidget
               onChallengeReady={(challengeId, answer) => {
                 setMathChallengeId(challengeId);
@@ -274,7 +291,7 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
               }}
             />
 
-            {/* Golden Submit Button */}
+            {/* Submit Button */}
             <button
               type="submit"
               disabled={!isAllRequiredCompleted || !walletAddress || !twitterUsername || !replyCommentLink || !mathAnswer || loading}
@@ -295,7 +312,7 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
                   <span>SUBMIT WHITELIST APPLICATION</span>
                 </>
               ) : (
-                <span>FILL DETAILS & COMPLETE QUESTS ({completedRequiredCount}/{requiredTasks.length})</span>
+                <span>OPEN ALL LINKS & FILL DETAILS ({completedRequiredCount}/{requiredTasks.length})</span>
               )}
             </button>
           </form>
