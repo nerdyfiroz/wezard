@@ -82,6 +82,7 @@ function savePersistedTasks(tasksList: schema.Task[]) {
 }
 
 class MemoryStore {
+  tasks: schema.Task[] = [...DEFAULT_TASKS];
   settings: Record<string, any> = {
     captchaEnabled: true,
     emailRequired: false,
@@ -105,6 +106,7 @@ class MemoryStore {
 
   getTasks(): schema.Task[] {
     const list = loadPersistedTasks();
+    this.tasks = list;
     return list.sort((a, b) => a.sortOrder - b.sortOrder);
   }
 
@@ -123,6 +125,7 @@ class MemoryStore {
     };
     list.push(newTask);
     savePersistedTasks(list);
+    this.tasks = list;
     return newTask;
   }
 
@@ -136,6 +139,7 @@ class MemoryStore {
       updatedAt: new Date(),
     };
     savePersistedTasks(list);
+    this.tasks = list;
     return list[index];
   }
 
@@ -145,6 +149,7 @@ class MemoryStore {
     if (index === -1) return false;
     list.splice(index, 1);
     savePersistedTasks(list);
+    this.tasks = list;
     return true;
   }
 
