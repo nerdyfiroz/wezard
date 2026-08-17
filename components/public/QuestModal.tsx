@@ -56,8 +56,6 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
   };
 
   // Determine completed task IDs:
-  // 1. Tasks visited via "Open Link"
-  // 2. Submit wallet tasks (automatically completed when wallet, twitter username, and reply link are filled)
   const isFormFilled = Boolean(
     walletAddress && evmAddressRegex.test(walletAddress) && twitterUsername.trim() && replyCommentLink.trim()
   );
@@ -153,8 +151,10 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
           {/* Header */}
           <div className="p-5 sm:p-6 border-b border-fintech-border flex items-center justify-between bg-obsidian-light/60">
             <div>
-              <h3 className="font-display font-bold text-xl text-white">WeZards Whitelist Quests</h3>
-              <p className="text-xs text-fintech-subtext mt-0.5 font-pixel">
+              <h3 className="font-display font-extrabold text-xl sm:text-2xl text-white tracking-wide">
+                WeZards Whitelist Quests
+              </h3>
+              <p className="text-xs sm:text-sm text-fintech-subtext mt-1 font-pixel">
                 Visit required links and submit your details to reserve your placement.
               </p>
             </div>
@@ -162,14 +162,14 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
               onClick={onClose}
               className="p-2 text-slate-400 hover:text-white rounded-lg hover:bg-fintech-card transition-colors"
             >
-              <X className="w-5 h-5" />
+              <X className="w-6 h-6" />
             </button>
           </div>
 
           <form onSubmit={handleSubmit} className="p-5 sm:p-6 space-y-6 max-h-[75vh] overflow-y-auto">
             {/* Error Banner */}
             {errorMsg && (
-              <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs flex items-center gap-3 font-pixel">
+              <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs sm:text-sm flex items-center gap-3 font-pixel">
                 <AlertCircle className="w-5 h-5 shrink-0" />
                 <span>{errorMsg}</span>
               </div>
@@ -177,19 +177,19 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
 
             {/* User Input Submission Details */}
             <div className="space-y-4">
-              <h4 className="text-xs font-mono font-semibold uppercase tracking-wider text-amber-300">
+              <h4 className="text-sm sm:text-base font-mono font-bold uppercase tracking-wider text-amber-300">
                 1. Required Submission Details
               </h4>
 
               <div className="space-y-4">
                 {/* EVM Wallet */}
                 <div>
-                  <label className="block text-xs text-slate-300 font-medium mb-1.5 font-pixel">
+                  <label className="block text-xs sm:text-sm text-slate-300 font-semibold mb-1.5 font-pixel">
                     EVM Wallet Address <span className="text-amber-400">*</span>
                   </label>
                   <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-                      <Wallet className="w-4 h-4" />
+                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                      <Wallet className="w-5 h-5" />
                     </div>
                     <input
                       type="text"
@@ -197,19 +197,19 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
                       placeholder="0x1234567890abcdef1234567890abcdef12345678"
                       value={walletAddress}
                       onChange={(e) => setWalletAddress(e.target.value)}
-                      className="w-full pl-9 pr-4 py-2.5 bg-obsidian-light border border-fintech-border rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 transition-colors font-mono"
+                      className="w-full pl-11 pr-4 py-3 bg-obsidian-light border border-fintech-border rounded-xl text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 transition-colors font-mono"
                     />
                   </div>
                 </div>
 
                 {/* Twitter / X Username */}
                 <div>
-                  <label className="block text-xs text-slate-300 font-medium mb-1.5 font-pixel">
+                  <label className="block text-xs sm:text-sm text-slate-300 font-semibold mb-1.5 font-pixel">
                     X / Twitter Username <span className="text-amber-400">*</span>
                   </label>
                   <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-                      <Twitter className="w-4 h-4 text-cyan-400" />
+                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                      <Twitter className="w-5 h-5 text-cyan-400" />
                     </div>
                     <input
                       type="text"
@@ -217,19 +217,19 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
                       placeholder="@yourusername"
                       value={twitterUsername}
                       onChange={(e) => setTwitterUsername(e.target.value)}
-                      className="w-full pl-9 pr-4 py-2.5 bg-obsidian-light border border-fintech-border rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 transition-colors font-pixel"
+                      className="w-full pl-11 pr-4 py-3 bg-obsidian-light border border-fintech-border rounded-xl text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 transition-colors font-pixel"
                     />
                   </div>
                 </div>
 
                 {/* Reply or Comment Link */}
                 <div>
-                  <label className="block text-xs text-slate-300 font-medium mb-1.5 font-pixel">
+                  <label className="block text-xs sm:text-sm text-slate-300 font-semibold mb-1.5 font-pixel">
                     Reply or Comment Link <span className="text-amber-400">*</span>
                   </label>
                   <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-                      <LinkIcon className="w-4 h-4" />
+                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                      <LinkIcon className="w-5 h-5" />
                     </div>
                     <input
                       type="url"
@@ -237,26 +237,26 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
                       placeholder="https://x.com/We_Zards/status/..."
                       value={replyCommentLink}
                       onChange={(e) => setReplyCommentLink(e.target.value)}
-                      className="w-full pl-9 pr-4 py-2.5 bg-obsidian-light border border-fintech-border rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 transition-colors font-mono"
+                      className="w-full pl-11 pr-4 py-3 bg-obsidian-light border border-fintech-border rounded-xl text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 transition-colors font-mono"
                     />
                   </div>
                 </div>
 
                 {/* Email (Optional) */}
                 <div>
-                  <label className="block text-xs text-slate-300 font-medium mb-1.5 font-pixel">
-                    Email Address <span className="text-slate-500 text-[10px]">(Optional)</span>
+                  <label className="block text-xs sm:text-sm text-slate-300 font-semibold mb-1.5 font-pixel">
+                    Email Address <span className="text-slate-500 text-xs">(Optional)</span>
                   </label>
                   <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-                      <Mail className="w-4 h-4" />
+                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                      <Mail className="w-5 h-5" />
                     </div>
                     <input
                       type="email"
                       placeholder="wizard@domain.com"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="w-full pl-9 pr-4 py-2.5 bg-obsidian-light border border-fintech-border rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 transition-colors font-pixel"
+                      className="w-full pl-11 pr-4 py-3 bg-obsidian-light border border-fintech-border rounded-xl text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 transition-colors font-pixel"
                     />
                   </div>
                 </div>
@@ -265,7 +265,7 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
 
             {/* Quests Task List & Progress Bar */}
             <div className="space-y-3 pt-2">
-              <h4 className="text-xs font-mono font-semibold uppercase tracking-wider text-amber-300">
+              <h4 className="text-sm sm:text-base font-mono font-bold uppercase tracking-wider text-amber-300">
                 2. Whitelist Quests (Click "Open Link" to complete)
               </h4>
 
@@ -295,7 +295,7 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
             <button
               type="submit"
               disabled={!isAllRequiredCompleted || !walletAddress || !twitterUsername || !replyCommentLink || !mathAnswer || loading}
-              className={`w-full py-4 rounded-xl font-display font-extrabold text-sm tracking-wider transition-all duration-200 shadow-xl flex items-center justify-center gap-2 ${
+              className={`w-full py-4 px-6 rounded-xl font-display font-extrabold text-sm sm:text-base tracking-wider transition-all duration-200 shadow-xl flex items-center justify-center gap-2 ${
                 isAllRequiredCompleted && walletAddress && twitterUsername && replyCommentLink && mathAnswer && !loading
                   ? "bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-500 text-obsidian hover:from-yellow-300 hover:to-amber-400 shadow-amber-500/30 cursor-pointer hover:scale-[1.01]"
                   : "bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700"
