@@ -65,3 +65,4 @@ git add .
 git commit -m "refactor: update branding to WeZards, remove points, add Math CAPTCHA"
 git push -u origin main
 ```
+# wezards
