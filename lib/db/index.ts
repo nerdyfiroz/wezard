@@ -286,6 +286,30 @@ export async function deleteEntry(id: string) {
   return false;
 }
 
+export async function getPlatformSettings() {
+  const DEFAULT_SETTINGS = {
+    captchaEnabled: false,
+    emailRequired: false,
+    applicationEnabled: true,
+    maintenanceMode: false,
+    duplicateWalletPolicy: "strict",
+  };
+
+  if (isDbConfigured && db) {
+    try {
+      const allSettings = await db.select().from(schema.settings);
+      const settingsMap: Record<string, any> = { ...DEFAULT_SETTINGS };
+      for (const row of allSettings) {
+        settingsMap[row.key] = row.value;
+      }
+      return settingsMap;
+    } catch {
+      return DEFAULT_SETTINGS;
+    }
+  }
+  return DEFAULT_SETTINGS;
+}
+
 // ─── Legacy memoryStore shim (keeps whitelist/submit route compiling) ────────
 // This is a no-op shim kept for backwards compatibility with existing imports.
 // All data operations now go through the functions above.

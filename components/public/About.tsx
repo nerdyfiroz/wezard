@@ -2,7 +2,7 @@
 
 import React, { useRef } from "react";
 import { motion, useInView } from "framer-motion";
-import { Sparkles, Gem, Users, Zap, Wand2, Star } from "lucide-react";
+import { Sparkles, Gem, Wand2 } from "lucide-react";
 
 const STATS = [
   {
@@ -32,32 +32,13 @@ const STATS = [
     bg: "bg-cyan-500/5",
     glow: "shadow-cyan-500/10",
   },
-  {
-    value: "∞",
-    label: "Pure Magic",
-    icon: <Star className="w-5 h-5" />,
-    color: "text-fintech-green",
-    border: "border-emerald-500/20",
-    bg: "bg-emerald-500/5",
-    glow: "shadow-emerald-500/10",
-  },
 ];
 
 const TRAITS = [
   {
     icon: "🧙",
-    title: "Fantasy World",
+    title: "Wizard World",
     desc: "A pixelated realm of wizards, witches & mystical energy — every corner alive with arcane wonder.",
-  },
-  {
-    icon: "🔮",
-    title: "Unique Emotions",
-    desc: "Each of the 3,333 Wezards carries its own emotion, crafted with patience pixel by pixel.",
-  },
-  {
-    icon: "✨",
-    title: "Pure Craftsmanship",
-    desc: "No AI. No shortcuts. Every trait — hand-drawn by @SickickZards with countless hours of dedication.",
   },
   {
     icon: "🪶",
@@ -83,7 +64,7 @@ export function About() {
     <section
       ref={ref}
       id="about"
-      className="relative z-10 w-full px-4 sm:px-6 lg:px-8 py-24 md:py-36 overflow-hidden"
+      className="relative z-10 w-full px-4 sm:px-6 lg:px-8 py-20 md:py-28 overflow-hidden"
     >
       {/* ── Ambient Glow ─────────────────────────────────────────────── */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
@@ -91,7 +72,7 @@ export function About() {
         <div className="absolute right-1/4 bottom-0 w-[400px] h-[400px] rounded-full bg-purple-500/5 blur-[100px]" />
       </div>
 
-      <div className="relative max-w-6xl mx-auto">
+      <div className="relative max-w-5xl mx-auto">
 
         {/* ── Section Badge ─────────────────────────────────────────────── */}
         <motion.div
@@ -124,16 +105,16 @@ export function About() {
           initial={{ opacity: 0, y: 20 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.6, delay: 0.16 }}
-          className="text-center text-slate-400 text-base sm:text-lg leading-relaxed max-w-2xl mx-auto mb-16 font-sans"
+          className="text-center text-slate-400 text-base sm:text-lg leading-relaxed max-w-2xl mx-auto mb-14 font-sans"
         >
           WeZards is a{" "}
           <span className="text-amber-300 font-semibold">fantasy & aesthetic pixelated world</span> of wizards —
           inspired by witches, mystical orbs, and magical energy. Each piece brought to life in{" "}
-          <span className="text-white font-semibold">40×40 pixel art</span>, crafted with emotion and soul.
+          <span className="text-white font-semibold">40×40 pixel art</span>.
         </motion.p>
 
-        {/* ── Stats Row ─────────────────────────────────────────────────── */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-20">
+        {/* ── Stats Row (3 Cards) ────────────────────────────────────────── */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-3xl mx-auto mb-14">
           {STATS.map((s, i) => (
             <motion.div
               key={s.label}
@@ -141,12 +122,12 @@ export function About() {
               initial="hidden"
               animate={inView ? "visible" : "hidden"}
               variants={fadeUp}
-              className={`flex flex-col items-center justify-center gap-2 p-5 rounded-2xl border ${s.border} ${s.bg} shadow-xl ${s.glow} group hover:scale-[1.03] transition-transform duration-300`}
+              className={`flex flex-col items-center justify-center gap-2 p-6 rounded-2xl border ${s.border} ${s.bg} shadow-xl ${s.glow} group hover:scale-[1.03] transition-transform duration-300`}
             >
               <div className={`${s.color} opacity-80 group-hover:opacity-100 transition-opacity`}>
                 {s.icon}
               </div>
-              <span className={`font-display font-extrabold text-2xl sm:text-3xl ${s.color} tracking-wider`}>
+              <span className={`font-display font-extrabold text-3xl ${s.color} tracking-wider`}>
                 {s.value}
               </span>
               <span className="text-slate-500 text-[11px] font-mono uppercase tracking-widest">{s.label}</span>
@@ -154,8 +135,8 @@ export function About() {
           ))}
         </div>
 
-        {/* ── Main Content Block ────────────────────────────────────────── */}
-        <div className="grid md:grid-cols-2 gap-6 mb-16">
+        {/* ── Main Content Block (Wizard World & On Robinhood Crypto) ───── */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
           {TRAITS.map((t, i) => (
             <motion.div
               key={t.title}
@@ -183,6 +164,7 @@ export function About() {
             </motion.div>
           ))}
         </div>
+
       </div>
     </section>
   );

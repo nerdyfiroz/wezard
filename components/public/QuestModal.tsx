@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, ShieldCheck, AlertCircle, Loader2 } from "lucide-react";
+import { X, ShieldCheck, AlertCircle, Loader2, Wallet, PauseCircle } from "lucide-react";
 import { ProgressBar } from "./ProgressBar";
 import { TaskItem } from "./TaskItem";
 import { MathCaptchaWidget } from "./MathCaptchaWidget";
@@ -17,17 +17,19 @@ interface QuestModalProps {
 
 export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [applicationEnabled, setApplicationEnabled] = useState(true);
   const [visitedTaskIds, setVisitedTaskIds] = useState<string[]>([]);
   // Per-task proof values: { [taskId]: proofUrl }
   const [taskProofs, setTaskProofs] = useState<Record<string, string>>({});
 
+  const [walletAddress, setWalletAddress] = useState("");
   const [mathChallengeId, setMathChallengeId] = useState("");
   const [mathAnswer, setMathAnswer] = useState("");
 
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
-  // Fetch active tasks from API
+  // Fetch active tasks & settings from API
   useEffect(() => {
     if (isOpen) {
       fetchTasks();
@@ -40,6 +42,9 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
       const data = await res.json();
       if (data.tasks) {
         setTasks(data.tasks);
+      }
+      if (data.applicationEnabled !== undefined) {
+        setApplicationEnabled(Boolean(data.applicationEnabled));
       }
     } catch (err) {
       console.error("Failed to load tasks:", err);
@@ -82,26 +87,20 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
     e.preventDefault();
     setErrorMsg("");
 
-    // 1. Extract EVM wallet address from task proofs or find proof that matches 0x regex
-    let detectedWallet = "";
-    for (const task of tasks) {
-      const val = (taskProofs[task.id] || "").trim();
-      if (task.type === "submit_wallet" || evmAddressRegex.test(val)) {
-        if (evmAddressRegex.test(val)) {
-          detectedWallet = val;
-          break;
-        }
-      }
+    if (!applicationEnabled) {
+      setErrorMsg("Whitelist applications are currently paused by the administration.");
+      return;
     }
 
-    // Fallback: look through all proof values for an EVM address
-    if (!detectedWallet) {
-      const any0x = Object.values(taskProofs).find((v) => evmAddressRegex.test(v.trim()));
-      if (any0x) detectedWallet = any0x.trim();
+    // 1. Determine EVM wallet address: from input box OR from task proofs
+    let effectiveWallet = walletAddress.trim();
+    if (!effectiveWallet) {
+      const proofWith0x = Object.values(taskProofs).find((val) => evmAddressRegex.test(val.trim()));
+      if (proofWith0x) effectiveWallet = proofWith0x.trim();
     }
 
-    if (!detectedWallet || !evmAddressRegex.test(detectedWallet)) {
-      setErrorMsg("Please enter a valid EVM wallet address (0x...) in the wallet quest proof box.");
+    if (!effectiveWallet || !evmAddressRegex.test(effectiveWallet)) {
+      setErrorMsg("Please enter a valid EVM wallet address (0x followed by 40 hex characters).");
       return;
     }
 
@@ -142,8 +141,8 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          walletAddress: detectedWallet,
-          twitterUsername: detectedTwitter || `@${detectedWallet.slice(2, 10)}`,
+          walletAddress: effectiveWallet,
+          twitterUsername: detectedTwitter || `@${effectiveWallet.slice(2, 10)}`,
           replyCommentLink: detectedReplyLink || "Completed via task quest",
           completedTaskIds,
           mathChallengeId,
@@ -161,7 +160,7 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
       }
 
       setLoading(false);
-      onSuccess(detectedWallet);
+      onSuccess(effectiveWallet);
     } catch (err) {
       setLoading(false);
       setErrorMsg("Submission error. Please check your connection and try again.");
@@ -199,6 +198,16 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
           </div>
 
           <form onSubmit={handleSubmit} className="p-5 sm:p-6 space-y-6 max-h-[75vh] overflow-y-auto">
+            {/* Whitelist Paused Banner */}
+            {!applicationEnabled && (
+              <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs sm:text-sm font-sans flex items-center gap-3 shadow-md">
+                <PauseCircle className="w-5 h-5 shrink-0 text-amber-400" />
+                <span className="leading-relaxed">
+                  Whitelist applications are currently paused by the administration.
+                </span>
+              </div>
+            )}
+
             {/* Error Banner */}
             {errorMsg && (
               <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm font-sans font-medium flex items-center gap-3 shadow-md">
@@ -229,6 +238,32 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
               </div>
             </div>
 
+            {/* ── Required EVM Wallet Address Box ── */}
+            <div className="space-y-2 pt-3 border-t border-fintech-border/50">
+              <label className="block text-xs sm:text-sm text-amber-200 font-bold font-display tracking-wide">
+                EVM Wallet Address <span className="text-amber-400">*</span>
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                  <Wallet className="w-5 h-5" />
+                </div>
+                <input
+                  type="text"
+                  required
+                  placeholder="0x1234567890abcdef1234567890abcdef12345678"
+                  value={walletAddress}
+                  onChange={(e) => {
+                    setWalletAddress(e.target.value);
+                    if (errorMsg) setErrorMsg("");
+                  }}
+                  className="w-full pl-11 pr-4 py-3 bg-obsidian-light border border-fintech-border rounded-xl text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-400/30 transition-all font-mono"
+                />
+              </div>
+              <p className="text-[11px] text-slate-500 font-mono">
+                Provide your Ethereum / EVM compatible wallet address (0x...) to receive whitelist allocation.
+              </p>
+            </div>
+
             {/* ── Math CAPTCHA ── */}
             <div className="pt-2 border-t border-fintech-border/50">
               <MathCaptchaWidget
@@ -242,9 +277,9 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
             {/* ── Submit Button ── */}
             <button
               type="submit"
-              disabled={!isAllRequiredCompleted || !mathAnswer || loading}
+              disabled={!applicationEnabled || !isAllRequiredCompleted || !mathAnswer || (!walletAddress && !Object.values(taskProofs).some(v => evmAddressRegex.test(v.trim()))) || loading}
               className={`w-full py-4 px-6 rounded-xl font-display font-extrabold text-sm sm:text-base tracking-wider transition-all duration-200 shadow-xl flex items-center justify-center gap-2 ${
-                isAllRequiredCompleted && mathAnswer && !loading
+                applicationEnabled && isAllRequiredCompleted && mathAnswer && (walletAddress || Object.values(taskProofs).some(v => evmAddressRegex.test(v.trim()))) && !loading
                   ? "bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-500 text-obsidian hover:from-yellow-300 hover:to-amber-400 shadow-amber-500/30 cursor-pointer hover:scale-[1.01]"
                   : "bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700"
               }`}
@@ -252,15 +287,17 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
               {loading ? (
                 <>
                   <Loader2 className="w-5 h-5 animate-spin" />
-                  <span>VERIFYING QUESTS...</span>
+                  <span>VERIFYING QUESTS & SAVING TO DATABASE...</span>
                 </>
-              ) : isAllRequiredCompleted && mathAnswer ? (
+              ) : !applicationEnabled ? (
+                <span>WHITELIST SUBMISSIONS PAUSED</span>
+              ) : isAllRequiredCompleted && mathAnswer && (walletAddress || Object.values(taskProofs).some(v => evmAddressRegex.test(v.trim()))) ? (
                 <>
                   <ShieldCheck className="w-5 h-5 stroke-[2.5]" />
                   <span>SUBMIT WHITELIST APPLICATION</span>
                 </>
               ) : (
-                <span>COMPLETE ALL QUEST PROOFS ({completedRequiredCount}/{requiredTasks.length})</span>
+                <span>COMPLETE QUESTS & ENTER WALLET ({completedRequiredCount}/{requiredTasks.length})</span>
               )}
             </button>
           </form>

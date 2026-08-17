@@ -1,12 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import { whitelistSubmitSchema } from "@/lib/validation/schemas";
 import { verifyMathCaptcha } from "@/lib/captcha/math-captcha";
-import { db, isDbConfigured, findEntryByWallet, findEntryByTwitter } from "@/lib/db";
+import { db, isDbConfigured, findEntryByWallet, findEntryByTwitter, getPlatformSettings } from "@/lib/db";
 import { whitelistEntries, taskCompletions } from "@/lib/db/schema";
 import crypto from "crypto";
 
 export async function POST(req: NextRequest) {
   try {
+    // Check if whitelist applications are currently open
+    const settings = await getPlatformSettings();
+    if (settings.applicationEnabled === false) {
+      return NextResponse.json(
+        { error: "Whitelist applications are currently paused by the administration." },
+        { status: 403 }
+      );
+    }
+
     // 1. Parse & Validate Input Body
     const body = await req.json();
     const validation = whitelistSubmitSchema.safeParse(body);
