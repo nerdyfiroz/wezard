@@ -134,7 +134,6 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
       if (!res.ok) {
         setErrorMsg(data.error || "Submission failed. Please check your inputs.");
         setLoading(false);
-        // Auto refresh Math CAPTCHA on error
         setCaptchaRefreshTrigger((prev) => prev + 1);
         return;
       }
@@ -144,7 +143,6 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
     } catch (err) {
       setLoading(false);
       setErrorMsg("Something went wrong. Please try again.");
-      // Auto refresh Math CAPTCHA on error
       setCaptchaRefreshTrigger((prev) => prev + 1);
     }
   };
@@ -163,10 +161,10 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
           {/* Header */}
           <div className="p-5 sm:p-6 border-b border-fintech-border flex items-center justify-between bg-obsidian-light/60">
             <div>
-              <h3 className="font-display font-extrabold text-xl sm:text-2xl text-white tracking-wide">
+              <h3 className="font-display font-extrabold text-xl sm:text-2xl text-amber-300 tracking-wider">
                 WeZards Whitelist Quests
               </h3>
-              <p className="text-xs sm:text-sm text-fintech-subtext mt-1 font-sans">
+              <p className="text-xs sm:text-sm text-amber-200/80 mt-1 font-sans">
                 Visit required links and submit your details to reserve your placement.
               </p>
             </div>
@@ -179,7 +177,7 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
           </div>
 
           <form onSubmit={handleSubmit} className="p-5 sm:p-6 space-y-6 max-h-[75vh] overflow-y-auto">
-            {/* Clean Plain English Error Banner (NOT Pixelated) */}
+            {/* Clean Plain English Error Banner */}
             {errorMsg && (
               <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm font-sans font-medium flex items-center gap-3 shadow-md">
                 <AlertCircle className="w-5 h-5 shrink-0" />
@@ -189,14 +187,14 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
 
             {/* User Input Submission Details */}
             <div id="submission-details-section" className="space-y-4 font-sans">
-              <h4 className="text-sm sm:text-base font-mono font-bold uppercase tracking-wider text-amber-300">
+              <h4 className="text-sm sm:text-base font-display font-extrabold uppercase tracking-wider text-amber-300 bg-clip-text text-transparent bg-gradient-to-r from-amber-200 to-yellow-400">
                 1. Required Submission Details
               </h4>
 
               <div className="space-y-4">
                 {/* EVM Wallet */}
                 <div>
-                  <label className="block text-xs sm:text-sm text-slate-300 font-semibold mb-1.5 font-sans">
+                  <label className="block text-xs sm:text-sm text-amber-200 font-bold mb-1.5 font-display tracking-wide">
                     EVM Wallet Address <span className="text-amber-400">*</span>
                   </label>
                   <div className="relative">
@@ -218,7 +216,7 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
 
                 {/* Twitter / X Username */}
                 <div>
-                  <label className="block text-xs sm:text-sm text-slate-300 font-semibold mb-1.5 font-sans">
+                  <label className="block text-xs sm:text-sm text-amber-200 font-bold mb-1.5 font-display tracking-wide">
                     X / Twitter Username <span className="text-amber-400">*</span>
                   </label>
                   <div className="relative">
@@ -238,7 +236,7 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
 
                 {/* Reply or Comment Link */}
                 <div>
-                  <label className="block text-xs sm:text-sm text-slate-300 font-semibold mb-1.5 font-sans">
+                  <label className="block text-xs sm:text-sm text-amber-200 font-bold mb-1.5 font-display tracking-wide">
                     Reply or Comment Link <span className="text-amber-400">*</span>
                   </label>
                   <div className="relative">
@@ -258,8 +256,8 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
 
                 {/* Email (Optional) */}
                 <div>
-                  <label className="block text-xs sm:text-sm text-slate-300 font-semibold mb-1.5 font-sans">
-                    Email Address <span className="text-slate-500 text-xs">(Optional)</span>
+                  <label className="block text-xs sm:text-sm text-amber-200 font-bold mb-1.5 font-display tracking-wide">
+                    Email Address <span className="text-slate-400 text-xs font-normal">(Optional)</span>
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
@@ -279,7 +277,7 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
 
             {/* Quests Task List & Progress Bar */}
             <div className="space-y-3 pt-2 font-sans">
-              <h4 className="text-sm sm:text-base font-mono font-bold uppercase tracking-wider text-amber-300">
+              <h4 className="text-sm sm:text-base font-display font-extrabold uppercase tracking-wider text-amber-300 bg-clip-text text-transparent bg-gradient-to-r from-amber-200 to-yellow-400">
                 2. Whitelist Quests (Click "Open Link" or "Fill Details" to complete)
               </h4>
 
@@ -297,7 +295,7 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
               </div>
             </div>
 
-            {/* 2-Number Math CAPTCHA Widget with Auto Refresh */}
+            {/* 2-Number Math CAPTCHA Widget */}
             <MathCaptchaWidget
               refreshTrigger={captchaRefreshTrigger}
               onChallengeReady={(challengeId, answer) => {
