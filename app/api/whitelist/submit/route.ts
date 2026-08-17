@@ -16,8 +16,8 @@ export async function POST(req: NextRequest) {
     const ipCheck = canIpSubmit(clientIp, 3);
     if (!ipCheck.allowed) {
       return NextResponse.json(
-        { error: "Your maximum number of whitelist entries (3) from this IP address has been reached." },
-        { status: 400 }
+        { error: "Too many requests" },
+        { status: 429 }
       );
     }
 
