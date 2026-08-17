@@ -4,6 +4,7 @@ import { taskSchema } from "@/lib/validation/schemas";
 import { db, isDbConfigured, memoryStore, DEFAULT_TASKS } from "@/lib/db";
 import { tasks } from "@/lib/db/schema";
 import { asc } from "drizzle-orm";
+import crypto from "crypto";
 
 export async function GET(req: NextRequest) {
   const session = await getAdminSessionFromCookies();
@@ -12,18 +13,40 @@ export async function GET(req: NextRequest) {
   }
 
   try {
+    let dbTasks: any[] = [];
     if (isDbConfigured && db) {
       try {
-        let allTasks = await db.select().from(tasks).orderBy(asc(tasks.sortOrder));
-        if (allTasks.length > 0) {
-          return NextResponse.json({ tasks: allTasks });
+        dbTasks = await db.select().from(tasks).orderBy(asc(tasks.sortOrder));
+
+        // Auto-seed Neon DB if tasks table is empty
+        if (dbTasks.length === 0) {
+          try {
+            await db.insert(tasks).values(
+              DEFAULT_TASKS.map((t) => ({
+                id: t.id,
+                title: t.title,
+                description: t.description,
+                type: t.type,
+                url: t.url || "",
+                required: t.required,
+                active: t.active,
+                sortOrder: t.sortOrder,
+              }))
+            );
+            dbTasks = await db.select().from(tasks).orderBy(asc(tasks.sortOrder));
+          } catch (seedErr) {
+            console.error("DB auto-seed tasks error:", seedErr);
+          }
         }
       } catch (dbErr) {
-        console.error("DB get admin tasks failed, fallback to memory store:", dbErr);
+        console.error("DB fetch admin tasks error:", dbErr);
       }
     }
 
-    return NextResponse.json({ tasks: memoryStore.getTasks() });
+    const memoryTasks = memoryStore.getTasks();
+    const finalTasks = dbTasks.length > 0 ? dbTasks : memoryTasks;
+
+    return NextResponse.json({ tasks: finalTasks });
   } catch (error) {
     console.error("Failed to fetch admin tasks:", error);
     return NextResponse.json({ tasks: DEFAULT_TASKS });
@@ -46,7 +69,7 @@ export async function POST(req: NextRequest) {
 
     const taskData = validation.data;
 
-    // Always add to memoryStore + /tmp store
+    // Always add to memoryStore + persistent /tmp store
     const newTaskInMemory = memoryStore.addTask({
       title: taskData.title,
       description: taskData.description,
@@ -60,26 +83,19 @@ export async function POST(req: NextRequest) {
 
     if (isDbConfigured && db) {
       try {
-        const [newTaskDb] = await db
-          .insert(tasks)
-          .values({
-            id: newTaskInMemory.id,
-            title: taskData.title,
-            description: taskData.description,
-            type: taskData.type,
-            url: taskData.url || "",
-            required: taskData.required,
-            verificationType: taskData.verificationType,
-            active: taskData.active,
-            sortOrder: taskData.sortOrder,
-          })
-          .returning();
-
-        if (newTaskDb) {
-          return NextResponse.json({ success: true, task: newTaskDb, tasks: memoryStore.getTasks() });
-        }
+        await db.insert(tasks).values({
+          id: newTaskInMemory.id,
+          title: taskData.title,
+          description: taskData.description,
+          type: taskData.type,
+          url: taskData.url || "",
+          required: taskData.required,
+          verificationType: taskData.verificationType,
+          active: taskData.active,
+          sortOrder: taskData.sortOrder,
+        });
       } catch (dbErr) {
-        console.error("DB insert task failed, fallback to memory store:", dbErr);
+        console.error("DB insert task error:", dbErr);
       }
     }
 
