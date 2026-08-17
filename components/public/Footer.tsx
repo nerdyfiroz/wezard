@@ -11,12 +11,7 @@ export function Footer() {
           <span className="text-xs text-fintech-subtext font-mono">© 2026 WeZards Sanctum. All rights reserved.</span>
         </div>
 
-        <div className="flex items-center gap-4 text-xs text-fintech-subtext font-mono">
-          <div className="flex items-center gap-1.5 text-emerald-400">
-            <Shield className="w-3.5 h-3.5" />
-            <span>Encrypted Server-Side Validation</span>
-          </div>
-        </div>
+
       </div>
     </footer>
   );
