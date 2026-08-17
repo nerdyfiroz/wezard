@@ -30,6 +30,8 @@ export function TaskItem({ task, isCompleted, onVisitTask }: TaskItemProps) {
     onVisitTask(task.id, task.url);
   };
 
+  const buttonLabel = task.url && task.url.trim().length > 0 ? "Open Link" : "Fill Details";
+
   return (
     <div
       onClick={handleAction}
@@ -90,8 +92,8 @@ export function TaskItem({ task, isCompleted, onVisitTask }: TaskItemProps) {
             }}
             className="px-4 py-2 rounded-xl text-xs sm:text-sm font-mono font-bold bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-500 hover:from-yellow-300 hover:to-amber-400 text-obsidian border border-amber-400/40 transition-all flex items-center gap-1.5 shadow-md shadow-amber-500/20 hover:scale-[1.02]"
           >
-            <span>{task.url ? "Open Link" : "Complete Task"}</span>
-            {task.url && <ExternalLink className="w-4 h-4 stroke-[2.5]" />}
+            <span>{buttonLabel}</span>
+            {task.url && task.url.trim().length > 0 && <ExternalLink className="w-4 h-4 stroke-[2.5]" />}
           </button>
         )}
       </div>

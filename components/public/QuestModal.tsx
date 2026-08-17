@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Wallet, Twitter, Link as LinkIcon, Mail, ShieldCheck, AlertCircle, Loader2 } from "lucide-react";
 import { ProgressBar } from "./ProgressBar";
@@ -29,6 +29,8 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
+  const walletInputRef = useRef<HTMLInputElement | null>(null);
+
   // Fetch active tasks from API
   useEffect(() => {
     if (isOpen) {
@@ -49,10 +51,14 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
   };
 
   const handleVisitTask = (taskId: string, url?: string | null) => {
-    if (url) {
+    if (url && url.trim().length > 0) {
       window.open(url, "_blank", "noopener,noreferrer");
+      setVisitedTaskIds((prev) => (prev.includes(taskId) ? prev : [...prev, taskId]));
+    } else {
+      // Smoothly scroll to and focus the EVM wallet submission input box!
+      walletInputRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      walletInputRef.current?.focus();
     }
-    setVisitedTaskIds((prev) => (prev.includes(taskId) ? prev : [...prev, taskId]));
   };
 
   // Determine completed task IDs:
@@ -81,6 +87,7 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
     // Wallet address validation
     if (!walletAddress || !evmAddressRegex.test(walletAddress)) {
       setErrorMsg("Please enter a valid EVM wallet address (0x followed by 40 hexadecimal characters).");
+      walletInputRef.current?.focus();
       return;
     }
 
@@ -176,7 +183,7 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
             )}
 
             {/* User Input Submission Details */}
-            <div className="space-y-4">
+            <div id="submission-details-section" className="space-y-4">
               <h4 className="text-sm sm:text-base font-mono font-bold uppercase tracking-wider text-amber-300">
                 1. Required Submission Details
               </h4>
@@ -192,12 +199,14 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
                       <Wallet className="w-5 h-5" />
                     </div>
                     <input
+                      ref={walletInputRef}
+                      id="wallet-input"
                       type="text"
                       required
                       placeholder="0x1234567890abcdef1234567890abcdef12345678"
                       value={walletAddress}
                       onChange={(e) => setWalletAddress(e.target.value)}
-                      className="w-full pl-11 pr-4 py-3 bg-obsidian-light border border-fintech-border rounded-xl text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 transition-colors font-mono"
+                      className="w-full pl-11 pr-4 py-3 bg-obsidian-light border border-fintech-border rounded-xl text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-400/30 transition-all font-mono"
                     />
                   </div>
                 </div>
@@ -266,7 +275,7 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
             {/* Quests Task List & Progress Bar */}
             <div className="space-y-3 pt-2">
               <h4 className="text-sm sm:text-base font-mono font-bold uppercase tracking-wider text-amber-300">
-                2. Whitelist Quests (Click "Open Link" to complete)
+                2. Whitelist Quests (Click "Open Link" or "Fill Details" to complete)
               </h4>
 
               <ProgressBar completedCount={completedRequiredCount} totalCount={requiredTasks.length} />
