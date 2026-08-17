@@ -24,6 +24,8 @@ export const whitelistSubmitSchema = z.object({
   completedTaskIds: z.array(z.string()).min(1, { message: "You must complete all required quests." }),
   mathChallengeId: z.string().min(1, { message: "Math CAPTCHA challenge ID is required." }),
   mathAnswer: z.union([z.string(), z.number()]),
+  // Per-task proof URLs keyed by taskId
+  taskProofs: z.record(z.string(), z.string()).optional(),
 });
 
 export const taskSchema = z.object({
@@ -35,6 +37,8 @@ export const taskSchema = z.object({
   verificationType: z.enum(["manual", "url", "api"]),
   active: z.boolean(),
   sortOrder: z.number().int(),
+  proofLabel: z.string().trim().max(255).optional().or(z.literal("")),
+  proofRequired: z.boolean().optional(),
 });
 
 export const adminLoginSchema = z.object({

@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { whitelistSubmitSchema } from "@/lib/validation/schemas";
 import { verifyMathCaptcha } from "@/lib/captcha/math-captcha";
-import { db, isDbConfigured, memoryStore } from "@/lib/db";
-import { whitelistEntries, tasks, taskCompletions } from "@/lib/db/schema";
-import { eq, or, and } from "drizzle-orm";
+import { db, isDbConfigured, findEntryByWallet, findEntryByTwitter } from "@/lib/db";
+import { whitelistEntries, taskCompletions } from "@/lib/db/schema";
 import crypto from "crypto";
 
 export async function POST(req: NextRequest) {
@@ -17,7 +16,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: firstError }, { status: 400 });
     }
 
-    const { walletAddress, twitterUsername, replyCommentLink, email, completedTaskIds, mathChallengeId, mathAnswer } =
+    const { walletAddress, twitterUsername, replyCommentLink, email, completedTaskIds, mathChallengeId, mathAnswer, taskProofs } =
       validation.data;
 
     // 2. Math CAPTCHA Server Verification
@@ -29,83 +28,69 @@ export async function POST(req: NextRequest) {
     const normalizedWallet = walletAddress.toLowerCase();
     const normalizedTwitter = twitterUsername.toLowerCase();
 
-    // Always record submission in persistent memoryStore so it's guaranteed saved
-    if (memoryStore.findEntryByWallet(normalizedWallet)) {
-      return NextResponse.json(
-        { error: "That wallet address has already joined the WeZards whitelist." },
-        { status: 400 }
-      );
-    }
-
-    if (memoryStore.findEntryByTwitter(normalizedTwitter)) {
-      return NextResponse.json(
-        { error: "That X/Twitter username has already been registered." },
-        { status: 400 }
-      );
-    }
-
-    // Generate valid UUID
-    const entryId = crypto.randomUUID();
-
-    // 3. Save into memoryStore + persistent /tmp store
-    const newMemoryEntry = memoryStore.addEntry({
-      walletAddress: normalizedWallet,
-      twitterUsername: normalizedTwitter,
-      replyCommentLink,
-      email: email || "",
-      completedTaskIds,
-    });
-
-    // 4. Try saving into Neon PostgreSQL DB
+    // 3. Duplicate check — DB-first
     if (isDbConfigured && db) {
-      try {
-        const existingDb = await db
-          .select()
-          .from(whitelistEntries)
-          .where(
-            or(
-              eq(whitelistEntries.walletAddress, normalizedWallet),
-              eq(whitelistEntries.twitterUsername, normalizedTwitter)
-            )
-          );
+      const [existingWallet, existingTwitter] = await Promise.all([
+        findEntryByWallet(normalizedWallet),
+        findEntryByTwitter(normalizedTwitter),
+      ]);
 
-        if (existingDb.length === 0) {
-          const [newDbEntry] = await db
-            .insert(whitelistEntries)
-            .values({
-              id: entryId,
-              walletAddress: normalizedWallet,
-              twitterUsername: normalizedTwitter,
-              replyCommentLink,
-              email: email || "",
-              status: "pending",
-            })
-            .returning();
-
-          if (completedTaskIds && completedTaskIds.length > 0 && newDbEntry) {
-            try {
-              await db.insert(taskCompletions).values(
-                completedTaskIds.map((taskId) => ({
-                  id: crypto.randomUUID(),
-                  whitelistEntryId: newDbEntry.id,
-                  taskId,
-                  status: "completed",
-                }))
-              );
-            } catch (tcErr) {
-              console.error("Task completions DB insert notice:", tcErr);
-            }
-          }
-        }
-      } catch (dbErr) {
-        console.error("PostgreSQL insertion notice:", dbErr);
+      if (existingWallet) {
+        return NextResponse.json(
+          { error: "That wallet address has already joined the WeZards whitelist." },
+          { status: 400 }
+        );
       }
+      if (existingTwitter) {
+        return NextResponse.json(
+          { error: "That X/Twitter username has already been registered." },
+          { status: 400 }
+        );
+      }
+
+      // 4. Insert into Neon DB
+      const entryId = crypto.randomUUID();
+      const [newDbEntry] = await db
+        .insert(whitelistEntries)
+        .values({
+          id: entryId,
+          walletAddress: normalizedWallet,
+          twitterUsername: normalizedTwitter,
+          replyCommentLink,
+          email: email || "",
+          status: "pending",
+        })
+        .returning();
+
+      // 5. Insert task completions with per-task proof URLs
+      if (completedTaskIds && completedTaskIds.length > 0 && newDbEntry) {
+        try {
+          await db.insert(taskCompletions).values(
+            completedTaskIds.map((taskId) => ({
+              id: crypto.randomUUID(),
+              whitelistEntryId: newDbEntry.id,
+              taskId,
+              proofUrl: taskProofs?.[taskId] ?? replyCommentLink ?? "",
+              status: "completed",
+            }))
+          );
+        } catch (tcErr) {
+          console.error("Task completions DB insert error:", tcErr);
+        }
+      }
+
+      return NextResponse.json({
+        success: true,
+        message: "WELCOME TO THE CIRCLE",
+        entryId: newDbEntry.id,
+      });
     }
 
+    // Local dev fallback (no DATABASE_URL)
     return NextResponse.json({
       success: true,
-      message: "WELCOME TO THE CIRCLE",
-      entryId: newMemoryEntry.id || entryId,
+      message: "WELCOME TO THE CIRCLE (dev mode)",
+      entryId: crypto.randomUUID(),
     });
   } catch (error) {
     console.error("Submission error:", error);

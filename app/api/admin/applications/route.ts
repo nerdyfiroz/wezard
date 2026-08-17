@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminSessionFromCookies } from "@/lib/auth/session";
-import { db, isDbConfigured, memoryStore } from "@/lib/db";
+import { db, isDbConfigured } from "@/lib/db";
 import { whitelistEntries } from "@/lib/db/schema";
 import { desc } from "drizzle-orm";
 
@@ -15,33 +15,11 @@ export async function GET(req: NextRequest) {
     const search = searchParams.get("search")?.toLowerCase() || "";
     const status = searchParams.get("status") || "all";
 
-    const memoryEntries = memoryStore.getEntries();
-    let dbEntries: any[] = [];
+    let entries: any[] = [];
 
     if (isDbConfigured && db) {
-      try {
-        dbEntries = await db.select().from(whitelistEntries).orderBy(desc(whitelistEntries.createdAt));
-      } catch (dbErr) {
-        console.error("DB get applications failed, fallback to memory store:", dbErr);
-      }
+      entries = await db.select().from(whitelistEntries).orderBy(desc(whitelistEntries.createdAt));
     }
-
-    // Merge DB entries and Memory entries without duplicates by walletAddress
-    const combinedMap = new Map<string, any>();
-    
-    // Add memory entries first
-    for (const entry of memoryEntries) {
-      combinedMap.set(entry.walletAddress.toLowerCase(), entry);
-    }
-
-    // Overlay DB entries
-    for (const entry of dbEntries) {
-      combinedMap.set(entry.walletAddress.toLowerCase(), entry);
-    }
-
-    let entries = Array.from(combinedMap.values()).sort(
-      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    );
 
     if (status !== "all") {
       entries = entries.filter((e) => e.status === status);

@@ -1,8 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminSessionFromCookies } from "@/lib/auth/session";
-import { db, isDbConfigured, memoryStore } from "@/lib/db";
+import { db, isDbConfigured } from "@/lib/db";
 import { settings } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
+
+const DEFAULT_SETTINGS = {
+  captchaEnabled: false,
+  emailRequired: false,
+  applicationEnabled: true,
+  maintenanceMode: false,
+  duplicateWalletPolicy: "strict",
+};
 
 export async function GET() {
   const session = await getAdminSessionFromCookies();
@@ -13,20 +21,14 @@ export async function GET() {
   try {
     if (isDbConfigured && db) {
       const allSettings = await db.select().from(settings);
-      const settingsMap: Record<string, any> = {
-        captchaEnabled: false,
-        emailRequired: false,
-        applicationEnabled: true,
-        maintenanceMode: false,
-        duplicateWalletPolicy: "strict",
-      };
+      const settingsMap: Record<string, any> = { ...DEFAULT_SETTINGS };
       for (const row of allSettings) {
         settingsMap[row.key] = row.value;
       }
       return NextResponse.json({ settings: settingsMap });
-    } else {
-      return NextResponse.json({ settings: memoryStore.settings });
     }
+    // Local dev fallback
+    return NextResponse.json({ settings: DEFAULT_SETTINGS });
   } catch (error) {
     return NextResponse.json({ error: "Failed to fetch settings" }, { status: 500 });
   }
@@ -52,13 +54,9 @@ export async function PATCH(req: NextRequest) {
           });
       }
       return NextResponse.json({ success: true });
-    } else {
-      memoryStore.settings = {
-        ...memoryStore.settings,
-        ...body,
-      };
-      return NextResponse.json({ success: true, settings: memoryStore.settings });
     }
+
+    return NextResponse.json({ success: true });
   } catch (error) {
     return NextResponse.json({ error: "Failed to update settings" }, { status: 500 });
   }

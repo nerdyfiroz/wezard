@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { WizardBackground } from "@/components/public/WizardBackground";
 import { Navbar } from "@/components/public/Navbar";
 import { Hero } from "@/components/public/Hero";
+import { About } from "@/components/public/About";
 import { QuestModal } from "@/components/public/QuestModal";
 import { SuccessModal } from "@/components/public/SuccessModal";
 import { Footer } from "@/components/public/Footer";
@@ -33,6 +34,9 @@ export default function HomePage() {
 
       {/* Hero Section */}
       <Hero onOpenQuests={handleOpenQuests} />
+
+      {/* About / Lore Section */}
+      <About />
 
       {/* Footer */}
       <Footer />

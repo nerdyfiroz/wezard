@@ -20,6 +20,9 @@ export const tasks = pgTable("tasks", {
   verificationType: varchar("verification_type", { length: 50 }).default("url").notNull(), // manual, url, api
   active: boolean("active").default(true).notNull(),
   sortOrder: integer("sort_order").default(0).notNull(),
+  // Proof fields: admin can ask for per-task proof submission
+  proofLabel: varchar("proof_label", { length: 255 }), // e.g. "Paste your reply tweet link"
+  proofRequired: boolean("proof_required").default(false).notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });

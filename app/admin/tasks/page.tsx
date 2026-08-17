@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Plus, Edit2, Trash2, CheckCircle2, XCircle, Sparkles, ExternalLink } from "lucide-react";
+import { Plus, Edit2, Trash2, CheckCircle2, XCircle, Sparkles, ExternalLink, Lock, Unlock } from "lucide-react";
 import { Task } from "@/lib/db/schema";
 import { TaskEditorModal } from "@/components/admin/TaskEditorModal";
 
@@ -107,6 +107,25 @@ export default function AdminTasksPage() {
     }
   };
 
+  const handleToggleRequired = async (task: Task) => {
+    try {
+      const res = await fetch(`/api/admin/tasks/${task.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ required: !task.required }),
+      });
+      const data = await res.json();
+      if (res.ok && data.tasks) {
+        setTasks(data.tasks);
+      } else {
+        alert(data.error || "Failed to toggle required state");
+        await fetchTasks();
+      }
+    } catch (err: any) {
+      console.error("Error toggling required state:", err);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-fintech-border/60 pb-6">
@@ -145,10 +164,10 @@ export default function AdminTasksPage() {
             <table className="w-full text-left text-xs font-sans">
               <thead className="bg-obsidian-light/80 border-b border-fintech-border text-fintech-subtext font-mono text-[11px] uppercase">
                 <tr>
-                  <th className="py-3.5 px-4">Order</th>
-                  <th className="py-3.5 px-4">Task Title</th>
+                  <th className="py-3.5 px-4">#</th>
+                  <th className="py-3.5 px-4">Task / Proof Label</th>
                   <th className="py-3.5 px-4">Type</th>
-                  <th className="py-3.5 px-4">Requirement</th>
+                  <th className="py-3.5 px-4">Required</th>
                   <th className="py-3.5 px-4">Status</th>
                   <th className="py-3.5 px-4 text-right">Actions</th>
                 </tr>
@@ -157,41 +176,53 @@ export default function AdminTasksPage() {
                 {tasks.map((t) => (
                   <tr key={t.id} className="hover:bg-obsidian-light/40 transition-colors">
                     <td className="py-3.5 px-4 font-mono font-bold text-amber-400">{t.sortOrder}</td>
-                    <td className="py-3.5 px-4 font-semibold text-white">
-                      <div className="flex flex-col">
-                        <span>{t.title}</span>
+                    <td className="py-3.5 px-4">
+                      <div className="flex flex-col gap-0.5">
+                        <span className="font-semibold text-white">{t.title}</span>
                         {t.url && (
                           <a
                             href={t.url}
                             target="_blank"
                             rel="noreferrer"
-                            className="text-[11px] text-slate-400 font-mono flex items-center gap-1 hover:text-cyan-400"
+                            className="text-[11px] text-slate-500 font-mono flex items-center gap-1 hover:text-cyan-400"
                           >
-                            <span>{t.url}</span>
                             <ExternalLink className="w-3 h-3" />
+                            <span className="truncate max-w-[200px]">{t.url}</span>
                           </a>
+                        )}
+                        {t.proofLabel && (
+                          <span className="text-[10px] font-mono text-cyan-400/70 flex items-center gap-1 mt-0.5">
+                            <span className="text-slate-500">Proof:</span>
+                            {t.proofLabel}
+                            {t.proofRequired && (
+                              <span className="px-1.5 py-0.5 bg-cyan-400/10 border border-cyan-400/30 text-cyan-400 rounded text-[9px]">REQ</span>
+                            )}
+                          </span>
                         )}
                       </div>
                     </td>
-                    <td className="py-3.5 px-4 font-mono text-cyan-400">{t.type}</td>
+                    <td className="py-3.5 px-4 font-mono text-cyan-400 text-[11px]">{t.type}</td>
                     <td className="py-3.5 px-4">
-                      {t.required ? (
-                        <span className="px-2 py-0.5 text-[10px] font-mono font-semibold rounded bg-amber-400/10 text-amber-300 border border-amber-400/30">
-                          REQUIRED
-                        </span>
-                      ) : (
-                        <span className="px-2 py-0.5 text-[10px] font-mono rounded bg-slate-800 text-slate-400 border border-slate-700">
-                          OPTIONAL
-                        </span>
-                      )}
+                      <button
+                        onClick={() => handleToggleRequired(t)}
+                        title="Click to toggle required/optional"
+                        className={`px-2.5 py-1 rounded-full text-[10px] font-mono font-semibold transition-all flex items-center gap-1 hover:scale-105 ${
+                          t.required
+                            ? "bg-amber-400/10 text-amber-300 border border-amber-400/30 hover:bg-amber-400/20"
+                            : "bg-slate-800 text-slate-400 border border-slate-700 hover:border-slate-600"
+                        }`}
+                      >
+                        {t.required ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
+                        <span>{t.required ? "REQUIRED" : "OPTIONAL"}</span>
+                      </button>
                     </td>
                     <td className="py-3.5 px-4">
                       <button
                         onClick={() => handleToggleActive(t)}
                         className={`px-2.5 py-1 rounded-full text-[10px] font-mono font-semibold transition-colors flex items-center gap-1 ${
                           t.active
-                            ? "bg-fintech-green/10 text-fintech-green border border-fintech-green/30"
-                            : "bg-slate-800 text-slate-400 border border-slate-700"
+                            ? "bg-fintech-green/10 text-fintech-green border border-fintech-green/30 hover:bg-fintech-green/20"
+                            : "bg-slate-800 text-slate-400 border border-slate-700 hover:border-slate-600"
                         }`}
                       >
                         {t.active ? <CheckCircle2 className="w-3 h-3" /> : <XCircle className="w-3 h-3" />}

@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { getAdminSessionFromCookies } from "@/lib/auth/session";
-import { db, isDbConfigured, memoryStore } from "@/lib/db";
+import { db, isDbConfigured } from "@/lib/db";
 import { whitelistEntries } from "@/lib/db/schema";
 import { desc } from "drizzle-orm";
+
 
 export async function GET() {
   const session = await getAdminSessionFromCookies();
@@ -22,9 +23,8 @@ export async function GET() {
 
     if (isDbConfigured && db) {
       entries = await db.select().from(whitelistEntries).orderBy(desc(whitelistEntries.createdAt));
-    } else {
-      entries = memoryStore.getEntries();
     }
+
 
     const headers = ["wallet_address", "twitter_username", "reply_comment_link", "email", "status", "created_at"];
     const rows = entries.map((e) => [

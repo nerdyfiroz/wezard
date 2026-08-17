@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Wallet, Link as LinkIcon, ShieldCheck, AlertCircle, Loader2 } from "lucide-react";
+import { X, Wallet, ShieldCheck, AlertCircle, Loader2 } from "lucide-react";
 import { ProgressBar } from "./ProgressBar";
 import { TaskItem } from "./TaskItem";
 import { MathCaptchaWidget } from "./MathCaptchaWidget";
@@ -19,6 +19,9 @@ interface QuestModalProps {
 export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [visitedTaskIds, setVisitedTaskIds] = useState<string[]>([]);
+  // Per-task proof values: { [taskId]: proofUrl }
+  const [taskProofs, setTaskProofs] = useState<Record<string, string>>({});
+
   const [walletAddress, setWalletAddress] = useState("");
   const [twitterUsername, setTwitterUsername] = useState("");
   const [replyCommentLink, setReplyCommentLink] = useState("");
@@ -55,29 +58,41 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
       window.open(url, "_blank", "noopener,noreferrer");
       setVisitedTaskIds((prev) => (prev.includes(taskId) ? prev : [...prev, taskId]));
     } else {
-      // Smoothly scroll down to and focus the EVM wallet submission input box!
+      // No URL: scroll to wallet input
       walletInputRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
       walletInputRef.current?.focus();
     }
   };
 
-  // Determine completed task IDs:
+  const handleProofChange = (taskId: string, value: string) => {
+    setTaskProofs((prev) => ({ ...prev, [taskId]: value }));
+    if (errorMsg) setErrorMsg("");
+  };
+
+  // Determine if form details are filled
   const isFormFilled = Boolean(
     walletAddress && evmAddressRegex.test(walletAddress) && twitterUsername.trim() && replyCommentLink.trim()
   );
 
-  const completedTaskIds = tasks
-    .filter((t) => {
-      if (t.type === "submit_wallet") {
-        return isFormFilled;
-      }
-      return visitedTaskIds.includes(t.id);
-    })
-    .map((t) => t.id);
+  // A task is considered "complete" when:
+  // - It's been visited (link opened) OR type is submit_wallet and form filled
+  // - AND if proofRequired, the proofValue is non-empty
+  const isTaskComplete = (task: Task): boolean => {
+    const hasProofBox = Boolean(task.proofLabel && task.proofLabel.trim().length > 0);
+    const proofVal = taskProofs[task.id] || "";
+    const proofOk = !hasProofBox || !task.proofRequired || proofVal.trim().length > 3;
+
+    if (task.type === "submit_wallet") {
+      return isFormFilled && proofOk;
+    }
+    return visitedTaskIds.includes(task.id) && proofOk;
+  };
+
+  const completedTaskIds = tasks.filter(isTaskComplete).map((t) => t.id);
 
   // Required Tasks enforcement
   const requiredTasks = tasks.filter((t) => t.required && t.active);
-  const completedRequiredCount = requiredTasks.filter((t) => completedTaskIds.includes(t.id)).length;
+  const completedRequiredCount = requiredTasks.filter((t) => isTaskComplete(t)).length;
   const isAllRequiredCompleted = requiredTasks.length > 0 && completedRequiredCount >= requiredTasks.length;
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -102,7 +117,7 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
     }
 
     if (!isAllRequiredCompleted) {
-      setErrorMsg("Please click 'Open Link' on all required quest links above before submitting.");
+      setErrorMsg("Please complete all required quests (click 'Open Link' and provide proof where required) before submitting.");
       return;
     }
 
@@ -124,6 +139,7 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
           completedTaskIds,
           mathChallengeId,
           mathAnswer,
+          taskProofs,
         }),
       });
 
@@ -161,7 +177,7 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
                 WeZards Whitelist Quests
               </h3>
               <p className="text-xs sm:text-sm text-amber-200/80 mt-1 font-sans">
-                Visit required links and submit your details to reserve your placement.
+                Complete all required quests and submit your details to reserve your placement.
               </p>
             </div>
             <button
@@ -174,7 +190,7 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
           </div>
 
           <form onSubmit={handleSubmit} className="p-5 sm:p-6 space-y-6 max-h-[75vh] overflow-y-auto">
-            {/* Clean Plain English Error Banner */}
+            {/* Error Banner */}
             {errorMsg && (
               <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm font-sans font-medium flex items-center gap-3 shadow-md">
                 <AlertCircle className="w-5 h-5 shrink-0" />
@@ -182,10 +198,10 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
               </div>
             )}
 
-            {/* 1. Whitelist Quests (Top) */}
+            {/* ── 1. Whitelist Quests (each task has its own proof box) ── */}
             <div className="space-y-3 font-sans">
               <h4 className="text-sm sm:text-base font-display font-extrabold uppercase tracking-wider text-amber-300 bg-clip-text text-transparent bg-gradient-to-r from-amber-200 to-yellow-400">
-                1. Whitelist Quests (Click "Open Link" to complete)
+                1. Whitelist Quests
               </h4>
 
               <ProgressBar completedCount={completedRequiredCount} totalCount={requiredTasks.length} />
@@ -195,14 +211,16 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
                   <TaskItem
                     key={task.id}
                     task={task}
-                    isCompleted={completedTaskIds.includes(task.id)}
+                    isCompleted={visitedTaskIds.includes(task.id) || (task.type === "submit_wallet" && isFormFilled)}
+                    proofValue={taskProofs[task.id] || ""}
                     onVisitTask={handleVisitTask}
+                    onProofChange={handleProofChange}
                   />
                 ))}
               </div>
             </div>
 
-            {/* 2. Required Submission Details */}
+            {/* ── 2. Required Submission Details ── */}
             <div id="submission-details-section" className="space-y-4 font-sans pt-2 border-t border-fintech-border/50">
               <h4 className="text-sm sm:text-base font-display font-extrabold uppercase tracking-wider text-amber-300 bg-clip-text text-transparent bg-gradient-to-r from-amber-200 to-yellow-400">
                 2. Required Submission Details
@@ -264,7 +282,9 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                      <LinkIcon className="w-5 h-5" />
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                      </svg>
                     </div>
                     <input
                       type="url"
@@ -282,7 +302,7 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
               </div>
             </div>
 
-            {/* 3. 2-Number Math CAPTCHA Widget */}
+            {/* ── 3. Math CAPTCHA ── */}
             <MathCaptchaWidget
               onChallengeReady={(challengeId, answer) => {
                 setMathChallengeId(challengeId);
@@ -290,7 +310,7 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
               }}
             />
 
-            {/* 4. Submit Button */}
+            {/* ── 4. Submit Button ── */}
             <button
               type="submit"
               disabled={!isAllRequiredCompleted || !walletAddress || !twitterUsername || !replyCommentLink || !mathAnswer || loading}
@@ -311,7 +331,7 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
                   <span>SUBMIT WHITELIST APPLICATION</span>
                 </>
               ) : (
-                <span>OPEN ALL LINKS & FILL DETAILS ({completedRequiredCount}/{requiredTasks.length})</span>
+                <span>COMPLETE QUESTS & FILL DETAILS ({completedRequiredCount}/{requiredTasks.length})</span>
               )}
             </button>
           </form>
