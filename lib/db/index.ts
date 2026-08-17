@@ -82,6 +82,13 @@ function savePersistedTasks(tasksList: schema.Task[]) {
 }
 
 class MemoryStore {
+  settings: Record<string, any> = {
+    captchaEnabled: true,
+    emailRequired: false,
+    applicationEnabled: true,
+    maintenanceMode: false,
+    duplicateWalletPolicy: "strict",
+  };
   whitelistEntries: schema.WhitelistEntry[] = [
     {
       id: "e-1",
