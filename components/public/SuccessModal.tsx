@@ -3,7 +3,7 @@
 import React from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
-import { X } from "lucide-react";
+import { X, Clock, Sparkles } from "lucide-react";
 
 interface SuccessModalProps {
   isOpen: boolean;
@@ -22,11 +22,11 @@ export function SuccessModal({ isOpen, onClose, walletAddress }: SuccessModalPro
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 10 }}
           transition={{ duration: 0.4, type: "spring", stiffness: 300, damping: 25 }}
-          className="relative w-full max-w-md bg-fintech-card border border-amber-500/40 rounded-2xl p-6 sm:p-8 text-center shadow-2xl shadow-amber-500/20 overflow-hidden"
+          className="relative w-full max-w-md bg-fintech-card border border-amber-500/40 rounded-2xl p-6 sm:p-8 text-center shadow-2xl shadow-amber-500/20 overflow-hidden font-sans"
         >
           {/* Ethereal Glow Background */}
           <div className="absolute -top-24 -left-24 w-48 h-48 bg-amber-500/20 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-fintech-green/20 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-amber-400/15 rounded-full blur-3xl pointer-events-none" />
 
           {/* Close button */}
           <button
@@ -51,18 +51,19 @@ export function SuccessModal({ isOpen, onClose, walletAddress }: SuccessModalPro
 
           {/* Main Title */}
           <h2 className="font-display font-extrabold text-2xl sm:text-3xl tracking-widest text-white uppercase bg-clip-text text-transparent bg-gradient-to-r from-amber-200 via-yellow-400 to-amber-500 drop-shadow-md">
-            WELCOME TO THE CIRCLE
+            ENTRY RECORDED
           </h2>
 
-          <div className="my-6 space-y-3 font-sans text-sm sm:text-base text-slate-300 leading-relaxed">
+          <div className="my-6 space-y-3 text-sm sm:text-base text-slate-300 leading-relaxed font-sans">
             <p className="font-medium text-amber-300">
               Your WeZards whitelist entry has been recorded.
             </p>
-            <p className="text-slate-300">
-              Your place has been reserved in the sanctum.
-            </p>
+            <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-200 text-xs sm:text-sm font-semibold flex items-center justify-center gap-2">
+              <Clock className="w-4 h-4 text-amber-400 shrink-0 animate-pulse" />
+              <span>Slot Status: Entry Pending — Wait for the Drop!</span>
+            </div>
             <p className="text-fintech-subtext text-xs font-mono">
-              Keep your wallet safe.
+              Stay tuned on X for official drop announcements.
             </p>
           </div>
 
@@ -77,9 +78,10 @@ export function SuccessModal({ isOpen, onClose, walletAddress }: SuccessModalPro
           {/* Confirmation Button */}
           <button
             onClick={onClose}
-            className="w-full py-3.5 px-6 rounded-xl font-display font-bold text-sm text-obsidian bg-gradient-to-r from-fintech-green to-emerald-400 hover:from-emerald-400 hover:to-fintech-green transition-all duration-200 shadow-lg shadow-fintech-green/25"
+            className="w-full py-4 px-6 rounded-xl font-display font-extrabold text-sm text-obsidian bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-500 hover:from-yellow-300 hover:to-amber-400 transition-all duration-200 shadow-xl shadow-amber-500/30 hover:scale-[1.01] flex items-center justify-center gap-2 font-pixel"
           >
-            RETURN TO SANCTUM
+            <Sparkles className="w-4 h-4 fill-current" />
+            <span>WAIT FOR THE DROP</span>
           </button>
         </motion.div>
       </div>
