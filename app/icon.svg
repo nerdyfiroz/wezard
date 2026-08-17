@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <linearGradient id="wandTip" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FDE68A" />
+      <stop offset="50%" stop-color="#F59E0B" />
+      <stop offset="100%" stop-color="#D97706" />
+    </linearGradient>
+    <linearGradient id="wandBody" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#374151" />
+      <stop offset="100%" stop-color="#111827" />
+    </linearGradient>
+    <linearGradient id="wandHandle" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#9CA3AF" />
+      <stop offset="100%" stop-color="#4B5563" />
+    </linearGradient>
+    <filter id="goldGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="1.5" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <!-- Dark Rounded Square Container -->
+  <rect width="64" height="64" rx="16" fill="#090C10" />
+  
+  <!-- Glowing Ethereal Gold Radial Glow -->
+  <circle cx="44" cy="20" r="18" fill="#F59E0B" opacity="0.35" filter="url(#goldGlow)" />
+
+  <!-- Magic Wand Handle -->
+  <path d="M 12 52 L 20 44 L 25 49 L 17 57 Z" fill="url(#wandHandle)" />
+  
+  <!-- Magic Wand Body -->
+  <path d="M 19 45 L 39 25 L 44 30 L 24 50 Z" fill="url(#wandBody)" />
+  
+  <!-- Magic Wand Golden Tip -->
+  <path d="M 38 26 L 47 17 C 49 15 52 18 50 20 L 43 31 Z" fill="url(#wandTip)" filter="url(#goldGlow)" />
+
+  <!-- Golden Sparkles / Stars -->
+  <!-- Top Big Sparkle -->
+  <path d="M 50 4 Q 50 12 42 12 Q 50 12 50 20 Q 50 12 58 12 Q 50 12 50 4 Z" fill="#FCD34D" filter="url(#goldGlow)" />
+  
+  <!-- Right Sparkle -->
+  <path d="M 57 24 Q 57 28 53 28 Q 57 28 57 32 Q 57 28 61 28 Q 57 28 57 24 Z" fill="#F59E0B" />
+  
+  <!-- Small Top Sparkle -->
+  <path d="M 34 8 Q 34 11 31 11 Q 34 11 34 14 Q 34 11 37 11 Q 34 11 34 8 Z" fill="#FDE68A" />
+</svg>

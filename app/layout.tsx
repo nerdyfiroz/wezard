@@ -18,6 +18,11 @@ const silkscreen = Silkscreen({
 export const metadata: Metadata = {
   title: "WeZards — Enter the Circle",
   description: "Complete the WeZards quests and earn your place in the circle.",
+  icons: {
+    icon: "/icon.svg",
+    shortcut: "/icon.svg",
+    apple: "/icon.svg",
+  },
   openGraph: {
     title: "WeZards — Enter the Circle",
     description: "Complete the WeZards quests and earn your place in the circle.",
