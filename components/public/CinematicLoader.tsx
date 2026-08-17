@@ -96,23 +96,35 @@ export function CinematicLoader({ onComplete }: CinematicLoaderProps) {
 
           {/* ── Central Cinematic Staff Frame ────────────────────────── */}
           <div className="relative z-10 flex flex-col items-center max-w-sm w-full px-6">
-            {/* Wand Artwork Container */}
+            {/* Wand Artwork Container (Transparent, Floating Arcane Levitation) */}
             <motion.div
               initial={{ scale: 0.85, opacity: 0, y: 15 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, ease: "easeOut" }}
-              className="relative w-40 h-40 sm:w-48 sm:h-48 mb-6 p-2 rounded-2xl bg-[#262933]/90 border border-slate-700/80 shadow-2xl shadow-black/60 flex items-center justify-center overflow-hidden group"
+              animate={{
+                scale: 1,
+                opacity: 1,
+                y: [0, -8, 0],
+              }}
+              transition={{
+                y: {
+                  duration: 2.6,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                },
+                scale: { duration: 0.7, ease: "easeOut" },
+                opacity: { duration: 0.7, ease: "easeOut" },
+              }}
+              className="relative w-44 h-44 sm:w-52 sm:h-52 mb-4 flex items-center justify-center pointer-events-none"
             >
-              {/* Outer Golden/Ruby Edge Accent */}
-              <div className="absolute inset-0 bg-gradient-to-tr from-red-500/10 via-transparent to-amber-400/10 pointer-events-none rounded-2xl" />
+              {/* Pulsing Ruby Energy Glow behind transparent staff */}
+              <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-28 h-28 rounded-full bg-red-500/35 blur-2xl pointer-events-none animate-pulse" />
 
               <Image
                 src="/loading-wand.png"
                 alt="WeZards Arcane Staff"
-                width={180}
-                height={180}
+                width={200}
+                height={200}
                 priority
-                className="w-full h-full object-contain filter drop-shadow-[0_0_12px_rgba(239,68,68,0.35)] group-hover:scale-105 transition-transform duration-300"
+                className="w-full h-full object-contain filter drop-shadow-[0_0_18px_rgba(239,68,68,0.5)] drop-shadow-[0_0_35px_rgba(245,158,11,0.25)]"
               />
             </motion.div>
 
