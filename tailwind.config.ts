@@ -34,6 +34,7 @@ const config: Config = {
         },
       },
       fontFamily: {
+        standard: ["Inter", "system-ui", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "sans-serif"],
         sans: ["var(--font-pixel)", "monospace", "sans-serif"],
         display: ["var(--font-silkscreen)", "var(--font-pixel)", "monospace", "sans-serif"],
         mono: ["var(--font-pixel)", "monospace"],
