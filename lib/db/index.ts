@@ -3,10 +3,22 @@ import { neon } from "@neondatabase/serverless";
 import * as schema from "./schema";
 import crypto from "crypto";
 
-const connectionString = process.env.DATABASE_URL;
-export const isDbConfigured = Boolean(connectionString && connectionString.startsWith("postgres"));
+const rawConnectionString = (
+  process.env.DATABASE_URL ||
+  process.env.POSTGRES_URL ||
+  process.env.NEON_DATABASE_URL ||
+  ""
+)
+  .trim()
+  .replace(/^["']|["']$/g, "");
 
-const sql_client = isDbConfigured ? neon(connectionString!) : null;
+export const isDbConfigured = Boolean(
+  rawConnectionString &&
+    (rawConnectionString.startsWith("postgres://") ||
+      rawConnectionString.startsWith("postgresql://"))
+);
+
+const sql_client = isDbConfigured ? neon(rawConnectionString) : null;
 export const db = sql_client ? drizzle(sql_client, { schema }) : null;
 
 import { asc, eq, sql } from "drizzle-orm";
@@ -206,18 +218,43 @@ export async function addUnifiedTask(taskData: {
 export async function updateUnifiedTask(id: string, updates: Partial<schema.Task>) {
   if (isDbConfigured && db) {
     await ensureMigrated();
-    const [updatedTask] = await db
+    let [updatedTask] = await db
       .update(schema.tasks)
       .set({ ...updates, updatedAt: new Date() })
       .where(eq(schema.tasks.id, id))
       .returning();
 
+    // If the task was not in DB yet, seed it with the updates
+    if (!updatedTask) {
+      const defaultMatch = DEFAULT_TASKS.find((t) => t.id === id);
+      if (defaultMatch) {
+        const [inserted] = await db
+          .insert(schema.tasks)
+          .values({
+            id: defaultMatch.id,
+            title: defaultMatch.title,
+            description: defaultMatch.description,
+            type: defaultMatch.type,
+            url: defaultMatch.url ?? "",
+            required: defaultMatch.required,
+            verificationType: defaultMatch.verificationType,
+            active: defaultMatch.active,
+            sortOrder: defaultMatch.sortOrder,
+            proofLabel: defaultMatch.proofLabel ?? null,
+            proofRequired: defaultMatch.proofRequired ?? false,
+            ...updates,
+            updatedAt: new Date(),
+          })
+          .returning();
+        updatedTask = inserted;
+      }
+    }
+
     const allTasks = await getUnifiedTasks();
     return { task: updatedTask, tasks: allTasks };
   }
 
-  // Local dev fallback — no-op
-  return { task: updates, tasks: DEFAULT_TASKS };
+  throw new Error("Database not connected. Please ensure DATABASE_URL is set in environment variables.");
 }
 
 // ─── deleteUnifiedTask ───────────────────────────────────────────────────────
