@@ -12,6 +12,28 @@ import { getMongoDb, isMongoConfigured } from "@/lib/db/mongodb";
 import { whitelistEntries, taskCompletions } from "@/lib/db/schema";
 import crypto from "crypto";
 
+/**
+ * Extract the real client IP from the request headers.
+ * On Vercel, the first value in x-forwarded-for is always the original client IP.
+ * Falls back to x-real-ip, then cf-connecting-ip (Cloudflare), then "unknown".
+ */
+function getClientIp(req: NextRequest): string {
+  const xForwardedFor = req.headers.get("x-forwarded-for");
+  if (xForwardedFor) {
+    // x-forwarded-for can be a comma-separated list; first entry is the real client
+    const firstIp = xForwardedFor.split(",")[0].trim();
+    if (firstIp) return firstIp;
+  }
+
+  const xRealIp = req.headers.get("x-real-ip");
+  if (xRealIp) return xRealIp.trim();
+
+  const cfIp = req.headers.get("cf-connecting-ip");
+  if (cfIp) return cfIp.trim();
+
+  return "unknown";
+}
+
 export async function POST(req: NextRequest) {
   try {
     // Check if whitelist applications are currently open
@@ -52,10 +74,13 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // 3. Collect real client IP
+    const ipAddress = getClientIp(req);
+
     const normalizedWallet = walletAddress.toLowerCase();
     const normalizedTwitter = (twitterUsername || "").toLowerCase();
 
-    // 3. Duplicate check (MongoDB or Postgres)
+    // 4. Duplicate check (MongoDB or Postgres)
     if (isDbConfigured) {
       const [existingWallet, existingTwitter] = await Promise.all([
         findEntryByWallet(normalizedWallet),
@@ -87,11 +112,12 @@ export async function POST(req: NextRequest) {
       status: "pending",
       taskProofs: taskProofs || {},
       completedTaskIds: completedTaskIds || [],
+      ipAddress,          // ← real client IP stored here
       createdAt: new Date(),
       updatedAt: new Date(),
     };
 
-    // 4. Save to MongoDB
+    // 5. Save to MongoDB
     if (isMongoConfigured) {
       const mongo = await getMongoDb();
       if (mongo) {
@@ -116,7 +142,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // 5. Save to PostgreSQL (Neon)
+    // 6. Save to PostgreSQL (Neon)
     if (db) {
       const [newDbEntry] = await db
         .insert(whitelistEntries)

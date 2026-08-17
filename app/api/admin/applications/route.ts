@@ -28,7 +28,8 @@ export async function GET(req: NextRequest) {
           (e.walletAddress && e.walletAddress.toLowerCase().includes(search)) ||
           (e.twitterUsername && e.twitterUsername.toLowerCase().includes(search)) ||
           (e.replyCommentLink && e.replyCommentLink.toLowerCase().includes(search)) ||
-          (e.email && e.email.toLowerCase().includes(search))
+          (e.email && e.email.toLowerCase().includes(search)) ||
+          (e.ipAddress && e.ipAddress.toLowerCase().includes(search))
       );
     }
 

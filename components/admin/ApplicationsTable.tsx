@@ -218,6 +218,12 @@ export function ApplicationsTable({ applications, onStatusChange, onDelete }: Ap
                 <span className="text-fintech-subtext text-[10px]">SUBMISSION DATE:</span>
                 <span>{formatDate(selectedEntry.createdAt)}</span>
               </div>
+              {(selectedEntry as any).ipAddress && (
+                <div className="p-3 bg-obsidian-light rounded-xl border border-emerald-500/30">
+                  <span className="text-emerald-400 block text-[10px] font-bold mb-0.5">CLIENT IP ADDRESS:</span>
+                  <span className="text-emerald-300 font-bold select-all">{(selectedEntry as any).ipAddress}</span>
+                </div>
+              )}
             </div>
             <div className="flex justify-end pt-2">
               <button
