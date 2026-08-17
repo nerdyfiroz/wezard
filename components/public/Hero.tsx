@@ -1,10 +1,19 @@
 "use client";
 
-import React from "react";
-import { motion } from "framer-motion";
-import { Sparkles, ArrowRight, Shield, Zap, Award } from "lucide-react";
+import React, { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Sparkles, ArrowRight, Twitter, ExternalLink, Info, Check } from "lucide-react";
 
 export function Hero({ onOpenQuests }: { onOpenQuests: () => void }) {
+  const [showOpenSeaToast, setShowOpenSeaToast] = useState(false);
+
+  const handleOpenSeaClick = () => {
+    setShowOpenSeaToast(true);
+    setTimeout(() => {
+      setShowOpenSeaToast(false);
+    }, 3500);
+  };
+
   return (
     <section className="relative pt-12 pb-20 md:pt-20 md:pb-32 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto flex flex-col items-center text-center z-10">
       {/* Top Ethereal Golden Badge */}
@@ -57,43 +66,66 @@ export function Hero({ onOpenQuests }: { onOpenQuests: () => void }) {
         </button>
       </motion.div>
 
-      {/* Robinhood-style Feature Highlights */}
+      {/* Social Links Row (Replacing Old Cards) */}
       <motion.div
-        initial={{ opacity: 0, y: 30 }}
+        initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.7, delay: 0.4 }}
-        className="mt-16 grid grid-cols-1 sm:grid-cols-3 gap-4 w-full max-w-4xl text-left"
+        className="mt-14 flex flex-wrap items-center justify-center gap-3 sm:gap-4 font-mono text-xs"
       >
-        <div className="p-5 rounded-2xl bg-fintech-card/60 border border-fintech-border backdrop-blur-sm hover:border-amber-400/30 transition-colors">
-          <div className="w-10 h-10 rounded-xl bg-amber-400/10 flex items-center justify-center text-amber-300 mb-3">
-            <Shield className="w-5 h-5" />
-          </div>
-          <h3 className="font-display font-semibold text-white text-base">Verified Access</h3>
-          <p className="text-xs text-fintech-subtext mt-1">
-            Server-enforced quest criteria. Pure meritocracy for true circle seekers.
-          </p>
-        </div>
+        {/* Project Twitter */}
+        <a
+          href="https://x.com/We_Zards"
+          target="_blank"
+          rel="noreferrer"
+          className="px-4 py-2.5 rounded-xl bg-fintech-card/80 border border-fintech-border hover:border-cyan-400/40 text-slate-200 hover:text-cyan-400 transition-all flex items-center gap-2 shadow-md hover:scale-[1.02]"
+        >
+          <Twitter className="w-4 h-4 text-cyan-400" />
+          <span className="font-semibold font-pixel">@We_Zards</span>
+          <ExternalLink className="w-3 h-3 text-slate-500" />
+        </a>
 
-        <div className="p-5 rounded-2xl bg-fintech-card/60 border border-fintech-border backdrop-blur-sm hover:border-arcane-purple/30 transition-colors">
-          <div className="w-10 h-10 rounded-xl bg-arcane-purple/10 flex items-center justify-center text-arcane-purple mb-3">
-            <Zap className="w-5 h-5" />
-          </div>
-          <h3 className="font-display font-semibold text-white text-base">Instant Tracking</h3>
-          <p className="text-xs text-fintech-subtext mt-1">
-            Real-time quest validation with seamless visual feedback and state save.
-          </p>
-        </div>
+        {/* Artist Twitter */}
+        <a
+          href="https://x.com/SickickZards"
+          target="_blank"
+          rel="noreferrer"
+          className="px-4 py-2.5 rounded-xl bg-fintech-card/80 border border-fintech-border hover:border-amber-400/40 text-slate-200 hover:text-amber-300 transition-all flex items-center gap-2 shadow-md hover:scale-[1.02]"
+        >
+          <Twitter className="w-4 h-4 text-amber-400" />
+          <span className="font-semibold font-pixel">@SickickZards (Artist)</span>
+          <ExternalLink className="w-3 h-3 text-slate-500" />
+        </a>
 
-        <div className="p-5 rounded-2xl bg-fintech-card/60 border border-fintech-border backdrop-blur-sm hover:border-amber-400/30 transition-colors">
-          <div className="w-10 h-10 rounded-xl bg-amber-400/10 flex items-center justify-center text-amber-300 mb-3">
-            <Award className="w-5 h-5" />
-          </div>
-          <h3 className="font-display font-semibold text-white text-base">Sanctum Slot</h3>
-          <p className="text-xs text-fintech-subtext mt-1">
-            Guaranteed early whitelist tier reserved directly upon quest completion.
-          </p>
-        </div>
+        {/* OpenSea Link with Coming Soon Toast */}
+        <button
+          onClick={handleOpenSeaClick}
+          className="px-4 py-2.5 rounded-xl bg-fintech-card/80 border border-fintech-border hover:border-blue-400/40 text-slate-200 hover:text-blue-400 transition-all flex items-center gap-2 shadow-md hover:scale-[1.02]"
+        >
+          <svg className="w-4 h-4 fill-[#2081E2]" viewBox="0 0 24 24">
+            <path d="M12 0C5.37 0 0 5.37 0 12s5.37 12 12 12 12-5.37 12-12S18.63 0 12 0zm5.95 12.82l-3.32 4.41c-.42.56-1.12.89-1.83.89H8.46c-.66 0-1.28-.27-1.74-.75l-2.07-2.17a2.38 2.38 0 0 1-.65-1.63V8.89c0-.66.27-1.29.75-1.75l2.17-2.07c.46-.44 1.09-.67 1.74-.67h4.08c.66 0 1.28.27 1.74.75l2.07 2.17c.44.46.67 1.09.67 1.74v4.68c0 .38-.1.74-.27 1.08z" />
+          </svg>
+          <span className="font-semibold font-pixel">OpenSea</span>
+          <span className="px-1.5 py-0.5 rounded text-[10px] bg-blue-500/10 text-blue-400 border border-blue-500/20 font-sans">
+            SOON
+          </span>
+        </button>
       </motion.div>
+
+      {/* OpenSea Toast Notification */}
+      <AnimatePresence>
+        {showOpenSeaToast && (
+          <motion.div
+            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 10, scale: 0.95 }}
+            className="fixed bottom-6 right-6 z-50 px-5 py-3 rounded-2xl bg-obsidian-light border border-blue-400/40 text-blue-300 shadow-2xl flex items-center gap-3 font-pixel text-sm"
+          >
+            <Info className="w-5 h-5 text-blue-400 shrink-0" />
+            <span>OpenSea Collection Coming Soon!</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </section>
   );
 }
