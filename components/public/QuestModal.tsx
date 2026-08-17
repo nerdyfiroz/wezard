@@ -273,35 +273,49 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
               </div>
             </div>
 
-            {/* ── EVM Wallet Address Box (Required) ── */}
-            <div className="space-y-2 font-sans">
-              <label className="flex items-center gap-1.5 text-xs sm:text-sm font-display font-bold text-amber-300 tracking-wider">
-                <Wallet className="w-4 h-4 text-amber-400" />
-                <span>EVM WALLET ADDRESS</span>
-                <span className="text-amber-400 font-bold">*</span>
-              </label>
+            {/* ── EVM Wallet Address Box (Identical Card Container & Alignment) ── */}
+            <div className="rounded-2xl border bg-fintech-card/80 border-fintech-border transition-all duration-200 overflow-hidden font-pixel">
+              {/* Header row identical to TaskItem */}
+              <div className="p-4 sm:p-5 flex items-start gap-4">
+                <div className="mt-0.5 w-10 h-10 rounded-xl bg-obsidian-light text-white border border-fintech-border flex items-center justify-center shrink-0">
+                  <Wallet className="w-5 h-5 text-white" />
+                </div>
 
-              <div className="relative">
-                <input
-                  type="text"
-                  required
-                  value={walletAddress}
-                  onChange={(e) => setWalletAddress(e.target.value.trim())}
-                  placeholder="0x1234567890abcdef1234567890abcdef12345678"
-                  className="h-12 w-full px-4 py-3 bg-[#282b35] text-white placeholder-slate-500 rounded-xl text-xs sm:text-sm font-mono font-bold border border-amber-400/60 shadow-[0_0_18px_rgba(245,158,11,0.25)] focus:outline-none focus:border-amber-400 focus:shadow-[0_0_26px_rgba(245,158,11,0.45)] focus:ring-2 focus:ring-amber-400/40 transition-all"
-                />
+                <div className="flex-1 flex flex-col">
+                  <div className="flex items-center gap-2.5 flex-wrap">
+                    <h4 className="font-display font-bold text-base sm:text-lg text-white">
+                      Submit EVM Wallet Address
+                    </h4>
+                    <span className="px-2.5 py-0.5 text-xs font-mono font-semibold rounded bg-amber-400/10 text-amber-300 border border-amber-400/30">
+                      REQUIRED
+                    </span>
+                  </div>
+
+                  <p className="text-xs sm:text-sm text-fintech-subtext mt-1.5 leading-relaxed font-pixel">
+                    Provide your Ethereum / EVM compatible wallet address (0x...) to receive whitelist allocation.
+                  </p>
+                </div>
               </div>
 
-              <p className="text-[11px] text-slate-400 font-pixel">
-                Provide your Ethereum / EVM compatible wallet address (0x...) to receive whitelist allocation.
-              </p>
-
-              {walletAddress.length > 0 && !evmAddressRegex.test(walletAddress) && (
-                <p className="text-[11px] text-amber-400/90 flex items-center gap-1">
-                  <AlertCircle className="w-3.5 h-3.5" />
-                  Must be a valid 42-character Ethereum / EVM address starting with 0x
-                </p>
-              )}
+              {/* Input Box identical to TaskItem */}
+              <div className="px-4 pb-4 sm:px-5 sm:pb-5">
+                <div className="relative">
+                  <input
+                    type="text"
+                    required
+                    value={walletAddress}
+                    onChange={(e) => setWalletAddress(e.target.value.trim())}
+                    placeholder="0x1234567890abcdef1234567890abcdef12345678"
+                    className="h-12 w-full px-4 py-3 bg-[#282b35] text-white placeholder-slate-500 rounded-xl text-xs sm:text-sm font-mono font-medium border border-amber-400/50 shadow-[0_0_14px_rgba(245,158,11,0.2)] focus:outline-none focus:border-amber-400 focus:shadow-[0_0_22px_rgba(245,158,11,0.4)] focus:ring-1 focus:ring-amber-400 transition-all"
+                  />
+                  {walletAddress.length > 0 && !evmAddressRegex.test(walletAddress) && (
+                    <p className="mt-1.5 text-[10px] text-amber-400/90 flex items-center gap-1 font-pixel">
+                      <AlertCircle className="w-3 h-3" />
+                      Must be a valid 42-character Ethereum / EVM address starting with 0x
+                    </p>
+                  )}
+                </div>
+              </div>
             </div>
 
             {/* ── Math CAPTCHA Security Gate ── */}

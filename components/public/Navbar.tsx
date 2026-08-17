@@ -14,6 +14,33 @@ export function XLogo({ className = "w-4 h-4" }: { className?: string }) {
   );
 }
 
+// Authentic Official OpenSea Logo (Ship Sailboat)
+export function OpenSeaLogo({ className = "w-4 h-4" }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 40 40" fill="none">
+      <circle cx="20" cy="20" r="20" fill="#2081E2" />
+      <path
+        d="M10.2037 20.3546L19.2979 26.4704V13.8828L10.2037 20.3546Z"
+        fill="white"
+        fillOpacity="0.8"
+      />
+      <path
+        d="M20.7021 7V26.4704L29.7963 20.3546L20.7021 7Z"
+        fill="white"
+      />
+      <path
+        d="M19.2979 27.9157L10.2037 22.8286L19.2979 33V27.9157Z"
+        fill="white"
+        fillOpacity="0.8"
+      />
+      <path
+        d="M20.7021 33V27.9157L29.7963 22.8286L20.7021 33Z"
+        fill="white"
+      />
+    </svg>
+  );
+}
+
 export function Navbar({ onOpenQuests }: { onOpenQuests: () => void }) {
   const [showOpenSeaToast, setShowOpenSeaToast] = useState(false);
   const [isXDropdownOpen, setIsXDropdownOpen] = useState(false);
@@ -64,10 +91,14 @@ export function Navbar({ onOpenQuests }: { onOpenQuests: () => void }) {
             >
               <XLogo className="w-4 h-4 text-white" />
               <span className="text-xs hidden sm:inline">Official X</span>
-              <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${isXDropdownOpen ? "rotate-180 text-amber-300" : "text-slate-400"}`} />
+              <ChevronDown
+                className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                  isXDropdownOpen ? "rotate-180 text-amber-300" : "text-slate-400"
+                }`}
+              />
             </button>
 
-            {/* Hover / Tap Dropdown Menu */}
+            {/* Hover / Tap Dropdown Menu with Project & Artist Avatars */}
             <AnimatePresence>
               {isXDropdownOpen && (
                 <motion.div
@@ -75,37 +106,63 @@ export function Navbar({ onOpenQuests }: { onOpenQuests: () => void }) {
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: 8, scale: 0.95 }}
                   transition={{ duration: 0.15 }}
-                  className="absolute right-0 mt-2 w-56 rounded-2xl bg-obsidian-light border border-fintech-border shadow-2xl p-2 z-50 font-pixel"
+                  className="absolute right-0 mt-2 w-60 rounded-2xl bg-[#21242d] border border-slate-700/80 shadow-2xl p-2 z-50 font-pixel"
                 >
+                  {/* Project X (@We_Zards) - using Wizemvbvbers.png */}
                   <a
                     href="https://x.com/We_Zards"
                     target="_blank"
                     rel="noreferrer"
                     className="flex items-center justify-between p-2.5 rounded-xl hover:bg-amber-400/10 text-slate-200 hover:text-white transition-colors group"
                   >
-                    <div className="flex items-center gap-2.5">
-                      <XLogo className="w-4 h-4 text-white" />
+                    <div className="flex items-center gap-3">
+                      <div className="relative w-7 h-7 rounded-lg overflow-hidden border border-amber-400/40 shrink-0">
+                        <Image
+                          src="/Wizemvbvbers.png"
+                          alt="WeZards Project"
+                          width={28}
+                          height={28}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
                       <div className="flex flex-col">
-                        <span className="text-xs font-bold">Project X</span>
-                        <span className="text-[10px] text-slate-400 font-mono">@We_Zards</span>
+                        <span className="text-xs font-bold text-white group-hover:text-amber-300 transition-colors">
+                          Project X
+                        </span>
+                        <span className="text-[10px] text-slate-400 font-mono">
+                          @We_Zards
+                        </span>
                       </div>
                     </div>
                     <ExternalLink className="w-3.5 h-3.5 text-slate-400 group-hover:text-amber-300" />
                   </a>
 
-                  <div className="my-1 border-t border-fintech-border/50" />
+                  <div className="my-1 border-t border-slate-700/50" />
 
+                  {/* Artist X (@SickickZards) - using Wizeffgmbers.png */}
                   <a
                     href="https://x.com/SickickZards"
                     target="_blank"
                     rel="noreferrer"
                     className="flex items-center justify-between p-2.5 rounded-xl hover:bg-amber-400/10 text-slate-200 hover:text-amber-300 transition-colors group"
                   >
-                    <div className="flex items-center gap-2.5">
-                      <XLogo className="w-4 h-4 text-amber-400" />
+                    <div className="flex items-center gap-3">
+                      <div className="relative w-7 h-7 rounded-lg overflow-hidden border border-amber-400/40 shrink-0">
+                        <Image
+                          src="/Wizeffgmbers.png"
+                          alt="Artist SickickZards"
+                          width={28}
+                          height={28}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
                       <div className="flex flex-col">
-                        <span className="text-xs font-bold">Artist X</span>
-                        <span className="text-[10px] text-slate-400 font-mono">@SickickZards</span>
+                        <span className="text-xs font-bold text-white group-hover:text-amber-300 transition-colors">
+                          Artist X
+                        </span>
+                        <span className="text-[10px] text-slate-400 font-mono">
+                          @SickickZards
+                        </span>
                       </div>
                     </div>
                     <ExternalLink className="w-3.5 h-3.5 text-slate-400 group-hover:text-amber-300" />
@@ -115,15 +172,13 @@ export function Navbar({ onOpenQuests }: { onOpenQuests: () => void }) {
             </AnimatePresence>
           </div>
 
-          {/* OpenSea */}
+          {/* OpenSea - Official Logo */}
           <button
             onClick={handleOpenSeaClick}
             className="p-2 sm:px-3 rounded-xl bg-fintech-card border border-fintech-border text-slate-200 hover:text-blue-400 hover:border-blue-400/40 transition-colors flex items-center gap-1.5"
             title="OpenSea Collection (Coming Soon)"
           >
-            <svg className="w-4 h-4 fill-[#2081E2]" viewBox="0 0 24 24">
-              <path d="M12 0C5.37 0 0 5.37 0 12s5.37 12 12 12 12-5.37 12-12S18.63 0 12 0zm5.95 12.82l-3.32 4.41c-.42.56-1.12.89-1.83.89H8.46c-.66 0-1.28-.27-1.74-.75l-2.07-2.17a2.38 2.38 0 0 1-.65-1.63V8.89c0-.66.27-1.29.75-1.75l2.17-2.07c.46-.44 1.09-.67 1.74-.67h4.08c.66 0 1.28.27 1.74.75l2.07 2.17c.44.46.67 1.09.67 1.74v4.68c0 .38-.1.74-.27 1.08z" />
-            </svg>
+            <OpenSeaLogo className="w-4 h-4" />
             <span className="text-xs font-pixel hidden sm:inline">OpenSea</span>
           </button>
 
@@ -132,10 +187,12 @@ export function Navbar({ onOpenQuests }: { onOpenQuests: () => void }) {
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-400"></span>
             </span>
-            <span className="font-mono text-[11px] tracking-wide font-semibold text-amber-300">CIRCLE OPEN</span>
+            <span className="font-mono text-[11px] tracking-wide font-semibold text-amber-300">
+              CIRCLE OPEN
+            </span>
           </div>
 
-          {/* Join Whitelist CTA - Golden Gradient */}
+          {/* Join Whitelist CTA */}
           <button
             onClick={onOpenQuests}
             className="px-3.5 py-2 rounded-xl text-xs font-extrabold tracking-wider text-obsidian bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-500 hover:from-yellow-300 hover:to-amber-400 transition-all duration-300 shadow-md shadow-amber-500/25 hover:shadow-amber-400/40 hover:scale-[1.02] flex items-center gap-1.5 font-pixel"
