@@ -290,10 +290,6 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
                       REQUIRED
                     </span>
                   </div>
-
-                  <p className="text-xs sm:text-sm text-fintech-subtext mt-1.5 leading-relaxed font-pixel">
-                    Provide your Ethereum / EVM compatible wallet address (0x...) to receive whitelist allocation.
-                  </p>
                 </div>
               </div>
 
