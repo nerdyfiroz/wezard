@@ -3,8 +3,16 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { ShieldCheck, Twitter, Info } from "lucide-react";
+import { ShieldCheck, Info } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+
+export function XLogo({ className = "w-4 h-4" }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+    </svg>
+  );
+}
 
 export function Navbar({ onOpenQuests }: { onOpenQuests: () => void }) {
   const [showOpenSeaToast, setShowOpenSeaToast] = useState(false);
@@ -42,39 +50,42 @@ export function Navbar({ onOpenQuests }: { onOpenQuests: () => void }) {
 
         {/* Live Status & Social Links */}
         <div className="flex items-center gap-3 sm:gap-4">
-          {/* Social Links */}
+          {/* Social Links with Real X Icon */}
           <div className="hidden md:flex items-center gap-2">
-            {/* Project Twitter */}
+            {/* Project X */}
             <a
               href="https://x.com/We_Zards"
               target="_blank"
               rel="noreferrer"
-              className="p-2 rounded-xl bg-fintech-card border border-fintech-border text-slate-300 hover:text-cyan-400 hover:border-cyan-400/40 transition-colors"
-              title="Project X / Twitter"
+              className="p-2 rounded-xl bg-fintech-card border border-fintech-border text-slate-200 hover:text-white hover:border-amber-400/40 transition-colors flex items-center gap-1.5"
+              title="Project X (@We_Zards)"
             >
-              <Twitter className="w-4 h-4 text-cyan-400" />
+              <XLogo className="w-4 h-4 text-white" />
+              <span className="text-xs font-pixel">Project</span>
             </a>
 
-            {/* Artist Twitter */}
+            {/* Artist X */}
             <a
               href="https://x.com/SickickZards"
               target="_blank"
               rel="noreferrer"
-              className="p-2 rounded-xl bg-fintech-card border border-fintech-border text-slate-300 hover:text-amber-300 hover:border-amber-400/40 transition-colors"
-              title="Artist X / Twitter"
+              className="p-2 rounded-xl bg-fintech-card border border-fintech-border text-slate-200 hover:text-amber-300 hover:border-amber-400/40 transition-colors flex items-center gap-1.5"
+              title="Artist X (@SickickZards)"
             >
-              <Twitter className="w-4 h-4 text-amber-400" />
+              <XLogo className="w-4 h-4 text-amber-400" />
+              <span className="text-xs font-pixel">Artist</span>
             </a>
 
             {/* OpenSea */}
             <button
               onClick={handleOpenSeaClick}
-              className="p-2 rounded-xl bg-fintech-card border border-fintech-border text-slate-300 hover:text-blue-400 hover:border-blue-400/40 transition-colors flex items-center gap-1"
+              className="p-2 rounded-xl bg-fintech-card border border-fintech-border text-slate-200 hover:text-blue-400 hover:border-blue-400/40 transition-colors flex items-center gap-1.5"
               title="OpenSea Collection (Coming Soon)"
             >
               <svg className="w-4 h-4 fill-[#2081E2]" viewBox="0 0 24 24">
                 <path d="M12 0C5.37 0 0 5.37 0 12s5.37 12 12 12 12-5.37 12-12S18.63 0 12 0zm5.95 12.82l-3.32 4.41c-.42.56-1.12.89-1.83.89H8.46c-.66 0-1.28-.27-1.74-.75l-2.07-2.17a2.38 2.38 0 0 1-.65-1.63V8.89c0-.66.27-1.29.75-1.75l2.17-2.07c.46-.44 1.09-.67 1.74-.67h4.08c.66 0 1.28.27 1.74.75l2.07 2.17c.44.46.67 1.09.67 1.74v4.68c0 .38-.1.74-.27 1.08z" />
               </svg>
+              <span className="text-xs font-pixel">OpenSea</span>
             </button>
           </div>
 

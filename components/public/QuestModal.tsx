@@ -2,12 +2,13 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Wallet, Twitter, Link as LinkIcon, Mail, ShieldCheck, AlertCircle, Loader2 } from "lucide-react";
+import { X, Wallet, Link as LinkIcon, Mail, ShieldCheck, AlertCircle, Loader2 } from "lucide-react";
 import { ProgressBar } from "./ProgressBar";
 import { TaskItem } from "./TaskItem";
 import { MathCaptchaWidget } from "./MathCaptchaWidget";
 import { Task } from "@/lib/db/schema";
 import { evmAddressRegex } from "@/lib/validation/schemas";
+import { XLogo } from "./Navbar";
 
 interface QuestModalProps {
   isOpen: boolean;
@@ -242,7 +243,7 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                      <Twitter className="w-5 h-5 text-cyan-400" />
+                      <XLogo className="w-5 h-5 text-white" />
                     </div>
                     <input
                       type="text"

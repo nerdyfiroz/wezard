@@ -1,8 +1,9 @@
 "use client";
 
 import React from "react";
-import { Check, ExternalLink, Twitter, Sparkles, Globe, Wallet } from "lucide-react";
+import { Check, ExternalLink, Sparkles, Globe, Wallet } from "lucide-react";
 import { Task } from "@/lib/db/schema";
+import { XLogo } from "./Navbar";
 
 interface TaskItemProps {
   task: Task;
@@ -16,7 +17,7 @@ export function TaskItem({ task, isCompleted, onVisitTask }: TaskItemProps) {
       case "x_follow":
       case "x_like":
       case "x_repost":
-        return <Twitter className="w-5 h-5 text-cyan-400" />;
+        return <XLogo className="w-5 h-5 text-white" />;
       case "visit_url":
         return <Globe className="w-5 h-5 text-purple-400" />;
       case "submit_wallet":
