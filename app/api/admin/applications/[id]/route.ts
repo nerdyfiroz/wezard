@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminSessionFromCookies } from "@/lib/auth/session";
-import { db, isDbConfigured } from "@/lib/db";
-import { whitelistEntries } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { updateEntryStatus, deleteEntry } from "@/lib/db";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   const session = await getAdminSessionFromCookies();
@@ -18,15 +19,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       return NextResponse.json({ error: "Invalid status value" }, { status: 400 });
     }
 
-    if (!isDbConfigured || !db) {
-      return NextResponse.json({ error: "Database not configured" }, { status: 503 });
-    }
-
-    const [updated] = await db
-      .update(whitelistEntries)
-      .set({ status, updatedAt: new Date() })
-      .where(eq(whitelistEntries.id, params.id))
-      .returning();
+    const updated = await updateEntryStatus(params.id, status);
 
     if (!updated) {
       return NextResponse.json({ error: "Entry not found" }, { status: 404 });
@@ -45,11 +38,7 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
   }
 
   try {
-    if (!isDbConfigured || !db) {
-      return NextResponse.json({ error: "Database not configured" }, { status: 503 });
-    }
-
-    await db.delete(whitelistEntries).where(eq(whitelistEntries.id, params.id));
+    await deleteEntry(params.id);
     return NextResponse.json({ success: true });
   } catch (error) {
     return NextResponse.json({ error: "Failed to delete entry" }, { status: 500 });

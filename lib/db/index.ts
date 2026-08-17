@@ -2,9 +2,15 @@ import { drizzle } from "drizzle-orm/neon-http";
 import { neon } from "@neondatabase/serverless";
 import * as schema from "./schema";
 import crypto from "crypto";
+import { getMongoDb, isMongoConfigured } from "./mongodb";
 
-const rawConnectionString = (
-  process.env.DATABASE_URL ||
+// ─── PostgreSQL (Neon) setup ─────────────────────────────────────────────────
+const rawPostgresString = (
+  (process.env.DATABASE_URL &&
+  (process.env.DATABASE_URL.startsWith("postgres://") ||
+    process.env.DATABASE_URL.startsWith("postgresql://"))
+    ? process.env.DATABASE_URL
+    : "") ||
   process.env.POSTGRES_URL ||
   process.env.NEON_DATABASE_URL ||
   ""
@@ -12,58 +18,20 @@ const rawConnectionString = (
   .trim()
   .replace(/^["']|["']$/g, "");
 
-export const isDbConfigured = Boolean(
-  rawConnectionString &&
-    (rawConnectionString.startsWith("postgres://") ||
-      rawConnectionString.startsWith("postgresql://"))
+export const isPgConfigured = Boolean(
+  rawPostgresString &&
+    (rawPostgresString.startsWith("postgres://") ||
+      rawPostgresString.startsWith("postgresql://"))
 );
 
-const sql_client = isDbConfigured ? neon(rawConnectionString) : null;
+export const isDbConfigured = isMongoConfigured || isPgConfigured;
+
+const sql_client = isPgConfigured ? neon(rawPostgresString) : null;
 export const db = sql_client ? drizzle(sql_client, { schema }) : null;
 
 import { asc, eq, sql } from "drizzle-orm";
 
-// ─── Auto-migration flag ─────────────────────────────────────────────────────
-let migrationRan = false;
-
-async function ensureMigrated() {
-  if (migrationRan || !db) return;
-  try {
-    // 1. Add proof columns safely
-    try {
-      await db.execute(sql`ALTER TABLE tasks ADD COLUMN IF NOT EXISTS proof_label VARCHAR(255)`);
-    } catch (e) {
-      console.error("proof_label column migration notice:", e);
-    }
-    try {
-      await db.execute(sql`ALTER TABLE tasks ADD COLUMN IF NOT EXISTS proof_required BOOLEAN NOT NULL DEFAULT false`);
-    } catch (e) {
-      console.error("proof_required column migration notice:", e);
-    }
-
-    // 2. Backfill proof labels for existing default tasks if they were null
-    try {
-      await db.execute(sql`
-        UPDATE tasks 
-        SET proof_label = 'Submit your X / Twitter handle or profile link' 
-        WHERE id = '7d9e4a1b-3c2f-4e8a-9b1d-5f6e7a8b9c0d' AND (proof_label IS NULL OR proof_label = '');
-      `);
-      await db.execute(sql`
-        UPDATE tasks 
-        SET proof_label = 'Paste your reply or comment tweet link', proof_required = true
-        WHERE id = 'a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d' AND (proof_label IS NULL OR proof_label = '');
-      `);
-    } catch (e) {
-      console.error("Backfill migration notice:", e);
-    }
-
-    migrationRan = true;
-  } catch (err) {
-    console.error("Auto-migration notice:", err);
-  }
-}
-
-// ─── Default seed tasks (used only once if DB table is empty) ───────────────
+// ─── Default seed tasks ───────────────────────────────────────────────────────
 export const DEFAULT_TASKS: schema.Task[] = [
   {
     id: "7d9e4a1b-3c2f-4e8a-9b1d-5f6e7a8b9c0d",
@@ -112,16 +80,79 @@ export const DEFAULT_TASKS: schema.Task[] = [
   },
 ];
 
+// ─── Auto-migration flag (Postgres) ──────────────────────────────────────────
+let migrationRan = false;
+
+async function ensureMigrated() {
+  if (migrationRan || !db) return;
+  try {
+    try {
+      await db.execute(sql`ALTER TABLE tasks ADD COLUMN IF NOT EXISTS proof_label VARCHAR(255)`);
+    } catch (e) {}
+    try {
+      await db.execute(sql`ALTER TABLE tasks ADD COLUMN IF NOT EXISTS proof_required BOOLEAN NOT NULL DEFAULT false`);
+    } catch (e) {}
+    migrationRan = true;
+  } catch (err) {}
+}
+
+// ─── MongoDB Auto-Seed ───────────────────────────────────────────────────────
+let mongoSeeded = false;
+async function ensureMongoSeeded() {
+  if (mongoSeeded) return;
+  const mongo = await getMongoDb();
+  if (!mongo) return;
+  try {
+    const tasksCol = mongo.collection("tasks");
+    const count = await tasksCol.countDocuments();
+    if (count === 0) {
+      await tasksCol.insertMany(
+        DEFAULT_TASKS.map((t) => ({ ...t, _id: t.id }))
+      );
+    }
+    mongoSeeded = true;
+  } catch (e) {
+    console.error("MongoDB seed notice:", e);
+  }
+}
+
 // ─── getUnifiedTasks ─────────────────────────────────────────────────────────
-// Primary source of truth: Neon DB. Falls back to DEFAULT_TASKS only in local
-// dev when DATABASE_URL is not configured.
 export async function getUnifiedTasks(): Promise<schema.Task[]> {
-  if (isDbConfigured && db) {
+  // 1. Check MongoDB
+  if (isMongoConfigured) {
+    await ensureMongoSeeded();
+    const mongo = await getMongoDb();
+    if (mongo) {
+      const dbTasks = await mongo
+        .collection("tasks")
+        .find({})
+        .sort({ sortOrder: 1 })
+        .toArray();
+      if (dbTasks.length > 0) {
+        return dbTasks.map((t: any) => ({
+          id: t.id || t._id,
+          title: t.title,
+          description: t.description,
+          type: t.type,
+          url: t.url ?? "",
+          required: Boolean(t.required),
+          verificationType: t.verificationType || "url",
+          active: t.active !== false,
+          sortOrder: Number(t.sortOrder) || 1,
+          proofLabel: t.proofLabel ?? null,
+          proofRequired: Boolean(t.proofRequired),
+          createdAt: t.createdAt ? new Date(t.createdAt) : new Date(),
+          updatedAt: t.updatedAt ? new Date(t.updatedAt) : new Date(),
+        }));
+      }
+    }
+  }
+
+  // 2. Check PostgreSQL
+  if (isPgConfigured && db) {
     await ensureMigrated();
     try {
       let dbTasks = await db.select().from(schema.tasks).orderBy(asc(schema.tasks.sortOrder));
-
-      // Auto-seed on first boot if table is empty
       if (dbTasks.length === 0) {
         try {
           await db.insert(schema.tasks).values(
@@ -140,20 +171,13 @@ export async function getUnifiedTasks(): Promise<schema.Task[]> {
             }))
           );
           dbTasks = await db.select().from(schema.tasks).orderBy(asc(schema.tasks.sortOrder));
-        } catch (seedErr) {
-          console.error("DB auto-seed tasks error:", seedErr);
-        }
+        } catch (seedErr) {}
       }
-
       return dbTasks;
-    } catch (dbErr) {
-      console.error("DB fetch tasks error:", dbErr);
-      // If DB is unreachable, throw so the caller can handle it
-      throw dbErr;
-    }
+    } catch (dbErr) {}
   }
 
-  // Local dev fallback (no DATABASE_URL set)
+  // 3. Fallback
   return [...DEFAULT_TASKS];
 }
 
@@ -172,7 +196,34 @@ export async function addUnifiedTask(taskData: {
 }) {
   const newId = crypto.randomUUID();
 
-  if (isDbConfigured && db) {
+  // 1. MongoDB
+  if (isMongoConfigured) {
+    const mongo = await getMongoDb();
+    if (mongo) {
+      const taskDoc = {
+        _id: newId,
+        id: newId,
+        title: taskData.title,
+        description: taskData.description,
+        type: taskData.type,
+        url: taskData.url ?? "",
+        required: taskData.required,
+        verificationType: taskData.verificationType,
+        active: taskData.active,
+        sortOrder: taskData.sortOrder,
+        proofLabel: taskData.proofLabel ?? null,
+        proofRequired: taskData.proofRequired ?? false,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      await mongo.collection("tasks").insertOne(taskDoc);
+      const allTasks = await getUnifiedTasks();
+      return { newTask: taskDoc, tasks: allTasks };
+    }
+  }
+
+  // 2. PostgreSQL
+  if (isPgConfigured && db) {
     await ensureMigrated();
     const [newTask] = await db
       .insert(schema.tasks)
@@ -195,8 +246,8 @@ export async function addUnifiedTask(taskData: {
     return { newTask, tasks: allTasks };
   }
 
-  // Local dev fallback
-  const newTask: schema.Task = {
+  // 3. Fallback
+  const fallbackTask: schema.Task = {
     id: newId,
     title: taskData.title,
     description: taskData.description,
@@ -211,12 +262,39 @@ export async function addUnifiedTask(taskData: {
     createdAt: new Date(),
     updatedAt: new Date(),
   };
-  return { newTask, tasks: [newTask] };
+  return { newTask: fallbackTask, tasks: [fallbackTask] };
 }
 
 // ─── updateUnifiedTask ───────────────────────────────────────────────────────
 export async function updateUnifiedTask(id: string, updates: Partial<schema.Task>) {
-  if (isDbConfigured && db) {
+  // 1. MongoDB
+  if (isMongoConfigured) {
+    const mongo = await getMongoDb();
+    if (mongo) {
+      const tasksCol = mongo.collection("tasks");
+      const res = await tasksCol.findOneAndUpdate(
+        { $or: [{ id }, { _id: id } as any] },
+        { $set: { ...updates, updatedAt: new Date() } },
+        { returnDocument: "after" }
+      );
+      if (!res) {
+        const defaultMatch = DEFAULT_TASKS.find((t) => t.id === id);
+        if (defaultMatch) {
+          await tasksCol.insertOne({
+            _id: id,
+            ...defaultMatch,
+            ...updates,
+            updatedAt: new Date(),
+          });
+        }
+      }
+      const allTasks = await getUnifiedTasks();
+      return { task: updates, tasks: allTasks };
+    }
+  }
+
+  // 2. PostgreSQL
+  if (isPgConfigured && db) {
     await ensureMigrated();
     let [updatedTask] = await db
       .update(schema.tasks)
@@ -224,7 +302,6 @@ export async function updateUnifiedTask(id: string, updates: Partial<schema.Task
       .where(eq(schema.tasks.id, id))
       .returning();
 
-    // If the task was not in DB yet, seed it with the updates
     if (!updatedTask) {
       const defaultMatch = DEFAULT_TASKS.find((t) => t.id === id);
       if (defaultMatch) {
@@ -254,12 +331,21 @@ export async function updateUnifiedTask(id: string, updates: Partial<schema.Task
     return { task: updatedTask, tasks: allTasks };
   }
 
-  throw new Error("Database not connected. Please ensure DATABASE_URL is set in environment variables.");
+  throw new Error("Database not connected. Please ensure MONGODB_URI or DATABASE_URL is set in environment variables.");
 }
 
 // ─── deleteUnifiedTask ───────────────────────────────────────────────────────
 export async function deleteUnifiedTask(id: string) {
-  if (isDbConfigured && db) {
+  if (isMongoConfigured) {
+    const mongo = await getMongoDb();
+    if (mongo) {
+      await mongo.collection("tasks").deleteOne({ $or: [{ id }, { _id: id } as any] });
+      const allTasks = await getUnifiedTasks();
+      return { tasks: allTasks };
+    }
+  }
+
+  if (isPgConfigured && db) {
     await ensureMigrated();
     await db.delete(schema.tasks).where(eq(schema.tasks.id, id));
     const allTasks = await getUnifiedTasks();
@@ -269,13 +355,20 @@ export async function deleteUnifiedTask(id: string) {
   return { tasks: DEFAULT_TASKS };
 }
 
-// ─── Whitelist Entry helpers (DB-first, memoryStore removed) ─────────────────
+// ─── Whitelist Entry helpers (MongoDB + PostgreSQL) ──────────────────────────
 export async function findEntryByWallet(wallet: string) {
-  if (isDbConfigured && db) {
+  const norm = wallet.toLowerCase();
+  if (isMongoConfigured) {
+    const mongo = await getMongoDb();
+    if (mongo) {
+      return await mongo.collection("whitelist_entries").findOne({ walletAddress: norm });
+    }
+  }
+  if (isPgConfigured && db) {
     const results = await db
       .select()
       .from(schema.whitelistEntries)
-      .where(eq(schema.whitelistEntries.walletAddress, wallet.toLowerCase()));
+      .where(eq(schema.whitelistEntries.walletAddress, norm));
     return results[0] ?? null;
   }
   return null;
@@ -283,7 +376,15 @@ export async function findEntryByWallet(wallet: string) {
 
 export async function findEntryByTwitter(handle: string) {
   const clean = handle.replace("@", "").toLowerCase();
-  if (isDbConfigured && db) {
+  if (isMongoConfigured) {
+    const mongo = await getMongoDb();
+    if (mongo) {
+      return await mongo.collection("whitelist_entries").findOne({
+        twitterUsername: { $regex: new RegExp(`^@?${clean}$`, "i") },
+      });
+    }
+  }
+  if (isPgConfigured && db) {
     const results = await db
       .select()
       .from(schema.whitelistEntries)
@@ -294,7 +395,17 @@ export async function findEntryByTwitter(handle: string) {
 }
 
 export async function getEntries() {
-  if (isDbConfigured && db) {
+  if (isMongoConfigured) {
+    const mongo = await getMongoDb();
+    if (mongo) {
+      return await mongo
+        .collection("whitelist_entries")
+        .find({})
+        .sort({ createdAt: -1 })
+        .toArray();
+    }
+  }
+  if (isPgConfigured && db) {
     return await db
       .select()
       .from(schema.whitelistEntries)
@@ -304,7 +415,19 @@ export async function getEntries() {
 }
 
 export async function updateEntryStatus(id: string, status: "pending" | "approved" | "rejected") {
-  if (isDbConfigured && db) {
+  if (isMongoConfigured) {
+    const mongo = await getMongoDb();
+    if (mongo) {
+      return await mongo
+        .collection("whitelist_entries")
+        .findOneAndUpdate(
+          { $or: [{ id }, { _id: id } as any] },
+          { $set: { status, updatedAt: new Date() } },
+          { returnDocument: "after" }
+        );
+    }
+  }
+  if (isPgConfigured && db) {
     const [updated] = await db
       .update(schema.whitelistEntries)
       .set({ status, updatedAt: new Date() })
@@ -316,13 +439,21 @@ export async function updateEntryStatus(id: string, status: "pending" | "approve
 }
 
 export async function deleteEntry(id: string) {
-  if (isDbConfigured && db) {
+  if (isMongoConfigured) {
+    const mongo = await getMongoDb();
+    if (mongo) {
+      await mongo.collection("whitelist_entries").deleteOne({ $or: [{ id }, { _id: id } as any] });
+      return true;
+    }
+  }
+  if (isPgConfigured && db) {
     await db.delete(schema.whitelistEntries).where(eq(schema.whitelistEntries.id, id));
     return true;
   }
   return false;
 }
 
+// ─── Platform Settings ───────────────────────────────────────────────────────
 export async function getPlatformSettings() {
   const DEFAULT_SETTINGS = {
     captchaEnabled: false,
@@ -332,7 +463,23 @@ export async function getPlatformSettings() {
     duplicateWalletPolicy: "strict",
   };
 
-  if (isDbConfigured && db) {
+  if (isMongoConfigured) {
+    const mongo = await getMongoDb();
+    if (mongo) {
+      try {
+        const rows = await mongo.collection("settings").find({}).toArray();
+        const settingsMap: Record<string, any> = { ...DEFAULT_SETTINGS };
+        for (const row of rows) {
+          settingsMap[row.key || row._id] = row.value;
+        }
+        return settingsMap;
+      } catch {
+        return DEFAULT_SETTINGS;
+      }
+    }
+  }
+
+  if (isPgConfigured && db) {
     try {
       const allSettings = await db.select().from(schema.settings);
       const settingsMap: Record<string, any> = { ...DEFAULT_SETTINGS };
@@ -344,19 +491,38 @@ export async function getPlatformSettings() {
       return DEFAULT_SETTINGS;
     }
   }
+
   return DEFAULT_SETTINGS;
 }
 
-// ─── Legacy memoryStore shim (keeps whitelist/submit route compiling) ────────
-// This is a no-op shim kept for backwards compatibility with existing imports.
-// All data operations now go through the functions above.
-export const memoryStore = {
-  findEntryByWallet: async (wallet: string) => findEntryByWallet(wallet),
-  findEntryByTwitter: async (handle: string) => findEntryByTwitter(handle),
-  addEntry: async (_: any) => null as any,
-  getEntries: async () => getEntries(),
-  updateEntryStatus: async (id: string, status: any) => updateEntryStatus(id, status),
-  deleteEntry: async (id: string) => deleteEntry(id),
-  tasks: DEFAULT_TASKS,
-  taskCompletions: [] as schema.TaskCompletion[],
-};
+export async function updatePlatformSettings(newSettings: Record<string, any>) {
+  if (isMongoConfigured) {
+    const mongo = await getMongoDb();
+    if (mongo) {
+      const col = mongo.collection("settings");
+      for (const [key, value] of Object.entries(newSettings)) {
+        await col.updateOne(
+          { key },
+          { $set: { key, value, updatedAt: new Date() } },
+          { upsert: true }
+        );
+      }
+      return true;
+    }
+  }
+
+  if (isPgConfigured && db) {
+    for (const [key, value] of Object.entries(newSettings)) {
+      await db
+        .insert(schema.settings)
+        .values({ key, value: value as any, updatedAt: new Date() })
+        .onConflictDoUpdate({
+          target: schema.settings.key,
+          set: { value: value as any, updatedAt: new Date() },
+        });
+    }
+    return true;
+  }
+
+  return true;
+}

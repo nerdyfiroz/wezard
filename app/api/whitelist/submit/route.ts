@@ -1,7 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { whitelistSubmitSchema } from "@/lib/validation/schemas";
 import { verifyMathCaptcha } from "@/lib/captcha/math-captcha";
-import { db, isDbConfigured, findEntryByWallet, findEntryByTwitter, getPlatformSettings } from "@/lib/db";
+import {
+  db,
+  isDbConfigured,
+  findEntryByWallet,
+  findEntryByTwitter,
+  getPlatformSettings,
+} from "@/lib/db";
+import { getMongoDb, isMongoConfigured } from "@/lib/db/mongodb";
 import { whitelistEntries, taskCompletions } from "@/lib/db/schema";
 import crypto from "crypto";
 
@@ -25,23 +32,34 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: firstError }, { status: 400 });
     }
 
-    const { walletAddress, twitterUsername, replyCommentLink, email, completedTaskIds, mathChallengeId, mathAnswer, taskProofs } =
-      validation.data;
+    const {
+      walletAddress,
+      twitterUsername,
+      replyCommentLink,
+      email,
+      completedTaskIds,
+      mathChallengeId,
+      mathAnswer,
+      taskProofs,
+    } = validation.data;
 
     // 2. Math CAPTCHA Server Verification
     const captchaResult = verifyMathCaptcha(mathChallengeId, mathAnswer);
     if (!captchaResult.success) {
-      return NextResponse.json({ error: captchaResult.error || "Math CAPTCHA verification failed." }, { status: 400 });
+      return NextResponse.json(
+        { error: captchaResult.error || "Math CAPTCHA verification failed." },
+        { status: 400 }
+      );
     }
 
     const normalizedWallet = walletAddress.toLowerCase();
-    const normalizedTwitter = twitterUsername.toLowerCase();
+    const normalizedTwitter = (twitterUsername || "").toLowerCase();
 
-    // 3. Duplicate check — DB-first
-    if (isDbConfigured && db) {
+    // 3. Duplicate check (MongoDB or Postgres)
+    if (isDbConfigured) {
       const [existingWallet, existingTwitter] = await Promise.all([
         findEntryByWallet(normalizedWallet),
-        findEntryByTwitter(normalizedTwitter),
+        normalizedTwitter ? findEntryByTwitter(normalizedTwitter) : null,
       ]);
 
       if (existingWallet) {
@@ -56,9 +74,50 @@ export async function POST(req: NextRequest) {
           { status: 400 }
         );
       }
+    }
 
-      // 4. Insert into Neon DB
-      const entryId = crypto.randomUUID();
+    const entryId = crypto.randomUUID();
+    const entryData = {
+      _id: entryId,
+      id: entryId,
+      walletAddress: normalizedWallet,
+      twitterUsername: normalizedTwitter || `@${normalizedWallet.slice(2, 10)}`,
+      replyCommentLink: replyCommentLink || "Completed via task quest",
+      email: email || "",
+      status: "pending",
+      taskProofs: taskProofs || {},
+      completedTaskIds: completedTaskIds || [],
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    // 4. Save to MongoDB
+    if (isMongoConfigured) {
+      const mongo = await getMongoDb();
+      if (mongo) {
+        await mongo.collection("whitelist_entries").insertOne(entryData);
+        if (completedTaskIds && completedTaskIds.length > 0) {
+          const completions = completedTaskIds.map((taskId) => ({
+            id: crypto.randomUUID(),
+            whitelistEntryId: entryId,
+            taskId,
+            proofUrl: taskProofs?.[taskId] ?? replyCommentLink ?? "",
+            status: "completed",
+            createdAt: new Date(),
+          }));
+          await mongo.collection("task_completions").insertMany(completions).catch(() => {});
+        }
+
+        return NextResponse.json({
+          success: true,
+          message: "WELCOME TO THE CIRCLE",
+          entryId,
+        });
+      }
+    }
+
+    // 5. Save to PostgreSQL (Neon)
+    if (db) {
       const [newDbEntry] = await db
         .insert(whitelistEntries)
         .values({
@@ -71,7 +130,6 @@ export async function POST(req: NextRequest) {
         })
         .returning();
 
-      // 5. Insert task completions with per-task proof URLs
       if (completedTaskIds && completedTaskIds.length > 0 && newDbEntry) {
         try {
           await db.insert(taskCompletions).values(
@@ -95,14 +153,16 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // Local dev fallback (no DATABASE_URL)
     return NextResponse.json({
       success: true,
-      message: "WELCOME TO THE CIRCLE (dev mode)",
-      entryId: crypto.randomUUID(),
+      message: "WELCOME TO THE CIRCLE",
+      entryId,
     });
-  } catch (error) {
-    console.error("Submission error:", error);
-    return NextResponse.json({ error: "Something went wrong. Please try again." }, { status: 500 });
+  } catch (error: any) {
+    console.error("Whitelist submission error:", error);
+    return NextResponse.json(
+      { error: error?.message || "Internal server error. Please try again later." },
+      { status: 500 }
+    );
   }
 }

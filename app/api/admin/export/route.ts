@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import { getAdminSessionFromCookies } from "@/lib/auth/session";
-import { db, isDbConfigured } from "@/lib/db";
-import { whitelistEntries } from "@/lib/db/schema";
-import { desc } from "drizzle-orm";
+import { getEntries } from "@/lib/db";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export async function GET() {
   const session = await getAdminSessionFromCookies();
@@ -12,31 +12,19 @@ export async function GET() {
   }
 
   try {
-    let entries: Array<{
-      walletAddress: string;
-      twitterUsername: string;
-      replyCommentLink: string;
-      email: string | null;
-      status: string;
-      createdAt: Date;
-    }> = [];
-
-    if (isDbConfigured && db) {
-      entries = await db.select().from(whitelistEntries).orderBy(desc(whitelistEntries.createdAt));
-    }
-
+    const entries = await getEntries();
 
     const headers = ["wallet_address", "twitter_username", "reply_comment_link", "email", "status", "created_at"];
-    const rows = entries.map((e) => [
-      `"${e.walletAddress}"`,
-      `"${e.twitterUsername}"`,
+    const rows = entries.map((e: any) => [
+      `"${e.walletAddress || ""}"`,
+      `"${e.twitterUsername || ""}"`,
       `"${(e.replyCommentLink || "").replace(/"/g, '""')}"`,
       `"${e.email || ""}"`,
-      `"${e.status}"`,
-      `"${new Date(e.createdAt).toISOString()}"`,
+      `"${e.status || "pending"}"`,
+      `"${new Date(e.createdAt || Date.now()).toISOString()}"`,
     ]);
 
-    const csvContent = [headers.join(","), ...rows.map((row) => row.join(","))].join("\n");
+    const csvContent = [headers.join(","), ...rows.map((row: any) => row.join(","))].join("\n");
 
     return new Response(csvContent, {
       status: 200,

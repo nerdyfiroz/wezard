@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminSessionFromCookies } from "@/lib/auth/session";
-import { db, isDbConfigured } from "@/lib/db";
-import { whitelistEntries } from "@/lib/db/schema";
-import { desc } from "drizzle-orm";
+import { getEntries } from "@/lib/db";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export async function GET(req: NextRequest) {
   const session = await getAdminSessionFromCookies();
@@ -15,21 +16,17 @@ export async function GET(req: NextRequest) {
     const search = searchParams.get("search")?.toLowerCase() || "";
     const status = searchParams.get("status") || "all";
 
-    let entries: any[] = [];
-
-    if (isDbConfigured && db) {
-      entries = await db.select().from(whitelistEntries).orderBy(desc(whitelistEntries.createdAt));
-    }
+    let entries = await getEntries();
 
     if (status !== "all") {
-      entries = entries.filter((e) => e.status === status);
+      entries = entries.filter((e: any) => e.status === status);
     }
 
     if (search) {
       entries = entries.filter(
-        (e) =>
-          e.walletAddress.toLowerCase().includes(search) ||
-          e.twitterUsername.toLowerCase().includes(search) ||
+        (e: any) =>
+          (e.walletAddress && e.walletAddress.toLowerCase().includes(search)) ||
+          (e.twitterUsername && e.twitterUsername.toLowerCase().includes(search)) ||
           (e.replyCommentLink && e.replyCommentLink.toLowerCase().includes(search)) ||
           (e.email && e.email.toLowerCase().includes(search))
       );
