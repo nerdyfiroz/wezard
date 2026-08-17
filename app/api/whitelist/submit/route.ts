@@ -1,27 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { whitelistSubmitSchema } from "@/lib/validation/schemas";
 import { verifyMathCaptcha } from "@/lib/captcha/math-captcha";
-import { canIpSubmit, incrementIpSubmissionCount } from "@/lib/security/rate-limit";
 import { db, isDbConfigured, memoryStore } from "@/lib/db";
 import { whitelistEntries, tasks, taskCompletions } from "@/lib/db/schema";
 import { eq, or, and } from "drizzle-orm";
 
 export async function POST(req: NextRequest) {
   try {
-    // 1. Get Client IP Address (unlimited webpage visits, max 3 form submissions)
-    const forwarded = req.headers.get("x-forwarded-for");
-    const clientIp = forwarded ? forwarded.split(",")[0].trim() : req.headers.get("x-real-ip") || "127.0.0.1";
-
-    // 2. Enforce Max 3 Form Submissions per IP
-    const ipCheck = canIpSubmit(clientIp, 3);
-    if (!ipCheck.allowed) {
-      return NextResponse.json(
-        { error: "Too many requests" },
-        { status: 429 }
-      );
-    }
-
-    // 3. Parse & Validate Input Body
+    // 1. Parse & Validate Input Body
     const body = await req.json();
     const validation = whitelistSubmitSchema.safeParse(body);
 
@@ -33,7 +19,7 @@ export async function POST(req: NextRequest) {
     const { walletAddress, twitterUsername, replyCommentLink, email, completedTaskIds, mathChallengeId, mathAnswer } =
       validation.data;
 
-    // 4. Math CAPTCHA Server Verification
+    // 2. Math CAPTCHA Server Verification
     const captchaResult = verifyMathCaptcha(mathChallengeId, mathAnswer);
     if (!captchaResult.success) {
       return NextResponse.json({ error: captchaResult.error || "Math CAPTCHA verification failed." }, { status: 400 });
@@ -42,7 +28,7 @@ export async function POST(req: NextRequest) {
     const normalizedWallet = walletAddress.toLowerCase();
     const normalizedTwitter = twitterUsername.toLowerCase();
 
-    // 5. Server-Side Verification: Ensure 100% of REQUIRED tasks are completed
+    // 3. Server-Side Verification: Ensure 100% of REQUIRED tasks are completed
     let requiredTaskIds: string[] = [];
     if (isDbConfigured && db) {
       const dbRequiredTasks = await db
@@ -65,7 +51,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 6. Check duplicate wallet & Twitter username
+    // 4. Check duplicate wallet & Twitter username
     if (isDbConfigured && db) {
       const existing = await db
         .select()
@@ -116,9 +102,6 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      // Increment successful submission count for IP
-      incrementIpSubmissionCount(clientIp);
-
       return NextResponse.json({
         success: true,
         message: "WELCOME TO THE CIRCLE",
@@ -147,9 +130,6 @@ export async function POST(req: NextRequest) {
         email,
         completedTaskIds,
       });
-
-      // Increment successful submission count for IP
-      incrementIpSubmissionCount(clientIp);
 
       return NextResponse.json({
         success: true,
