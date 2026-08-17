@@ -55,11 +55,6 @@ export function Hero({ onOpenQuests }: { onOpenQuests: () => void }) {
           <span>JOIN THE WHITELIST</span>
           <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform stroke-[2.5]" />
         </button>
-
-        {/* Secondary small text */}
-        <p className="text-xs text-slate-500 font-mono tracking-wide">
-          No collection shown. No distractions. Just the quest.
-        </p>
       </motion.div>
 
       {/* Robinhood-style Feature Highlights */}
