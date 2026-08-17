@@ -16,6 +16,7 @@ export default function AdminTasksPage() {
   }, []);
 
   const fetchTasks = async () => {
+    setLoading(true);
     try {
       const res = await fetch("/api/admin/tasks");
       if (res.ok) {
@@ -47,14 +48,14 @@ export default function AdminTasksPage() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(taskData),
         });
-        if (res.ok) fetchTasks();
+        if (res.ok) await fetchTasks();
       } else {
         const res = await fetch("/api/admin/tasks", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(taskData),
         });
-        if (res.ok) fetchTasks();
+        if (res.ok) await fetchTasks();
       }
     } catch (err) {
       console.error("Error saving task:", err);
@@ -65,7 +66,7 @@ export default function AdminTasksPage() {
     if (!confirm("Are you sure you want to delete this task?")) return;
     try {
       const res = await fetch(`/api/admin/tasks/${id}`, { method: "DELETE" });
-      if (res.ok) fetchTasks();
+      if (res.ok) await fetchTasks();
     } catch (err) {
       console.error("Failed to delete task:", err);
     }
@@ -78,7 +79,7 @@ export default function AdminTasksPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ active: !task.active }),
       });
-      if (res.ok) fetchTasks();
+      if (res.ok) await fetchTasks();
     } catch (err) {
       console.error("Error toggling active state:", err);
     }
@@ -93,18 +94,29 @@ export default function AdminTasksPage() {
         </div>
         <button
           onClick={handleCreateNew}
-          className="px-4 py-2.5 rounded-xl text-xs font-bold text-obsidian bg-fintech-green hover:bg-fintech-green-hover transition-colors shadow-lg shadow-fintech-green/20 flex items-center gap-2"
+          className="px-4 py-2.5 rounded-xl text-xs font-bold text-obsidian bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-500 hover:from-yellow-300 hover:to-amber-400 transition-colors shadow-lg shadow-amber-500/20 flex items-center gap-2"
         >
-          <Plus className="w-4 h-4" />
+          <Plus className="w-4 h-4 stroke-[3]" />
           <span>Create New Task</span>
         </button>
       </div>
 
       <div className="bg-fintech-card border border-fintech-border rounded-2xl overflow-hidden shadow-xl">
         {loading ? (
-          <div className="p-8 text-center font-mono text-xs text-fintech-green flex items-center justify-center gap-2">
+          <div className="p-8 text-center font-mono text-xs text-amber-400 flex items-center justify-center gap-2">
             <Sparkles className="w-4 h-4 animate-spin" />
             <span>Loading tasks catalog...</span>
+          </div>
+        ) : tasks.length === 0 ? (
+          <div className="p-12 text-center space-y-4">
+            <p className="text-slate-400 text-xs font-mono">No tasks currently configured.</p>
+            <button
+              onClick={handleCreateNew}
+              className="px-4 py-2 rounded-xl text-xs font-bold text-obsidian bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-500 hover:from-yellow-300 hover:to-amber-400 transition-colors shadow-md shadow-amber-500/20 inline-flex items-center gap-2"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Create First Task</span>
+            </button>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -122,7 +134,7 @@ export default function AdminTasksPage() {
               <tbody className="divide-y divide-fintech-border/50 text-slate-200">
                 {tasks.map((t) => (
                   <tr key={t.id} className="hover:bg-obsidian-light/40 transition-colors">
-                    <td className="py-3.5 px-4 font-mono font-bold text-fintech-green">{t.sortOrder}</td>
+                    <td className="py-3.5 px-4 font-mono font-bold text-amber-400">{t.sortOrder}</td>
                     <td className="py-3.5 px-4 font-semibold text-white">
                       <div className="flex flex-col">
                         <span>{t.title}</span>
@@ -142,7 +154,7 @@ export default function AdminTasksPage() {
                     <td className="py-3.5 px-4 font-mono text-cyan-400">{t.type}</td>
                     <td className="py-3.5 px-4">
                       {t.required ? (
-                        <span className="px-2 py-0.5 text-[10px] font-mono font-semibold rounded bg-emerald-500/10 text-fintech-green border border-fintech-green/20">
+                        <span className="px-2 py-0.5 text-[10px] font-mono font-semibold rounded bg-amber-400/10 text-amber-300 border border-amber-400/30">
                           REQUIRED
                         </span>
                       ) : (

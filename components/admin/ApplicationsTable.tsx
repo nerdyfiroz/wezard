@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { Search, CheckCircle2, XCircle, Trash2, Eye, ExternalLink } from "lucide-react";
 import { WhitelistEntry } from "@/lib/db/schema";
 import { truncateWallet, formatDate } from "@/lib/utils";
+import { ExportButton } from "./ExportButton";
 
 interface ApplicationsTableProps {
   applications: WhitelistEntry[];
@@ -41,7 +42,7 @@ export function ApplicationsTable({ applications, onStatusChange, onDelete }: Ap
               onClick={() => setStatusFilter(st)}
               className={`px-3.5 py-1.5 rounded-lg capitalize transition-colors ${
                 statusFilter === st
-                  ? "bg-fintech-green text-obsidian font-bold shadow-sm"
+                  ? "bg-amber-400 text-obsidian font-bold shadow-sm"
                   : "text-slate-400 hover:text-white"
               }`}
             >
@@ -50,16 +51,19 @@ export function ApplicationsTable({ applications, onStatusChange, onDelete }: Ap
           ))}
         </div>
 
-        {/* Search Input */}
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-          <input
-            type="text"
-            placeholder="Search wallet, Twitter, reply link, or email..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 bg-fintech-card border border-fintech-border rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-fintech-green transition-colors font-mono"
-          />
+        {/* Search Input & Export Button */}
+        <div className="flex items-center gap-2 flex-1 max-w-lg">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Search wallet, Twitter, reply link, or email..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full pl-9 pr-4 py-2 bg-fintech-card border border-fintech-border rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 transition-colors font-mono"
+            />
+          </div>
+          <ExportButton />
         </div>
       </div>
 
@@ -93,7 +97,7 @@ export function ApplicationsTable({ applications, onStatusChange, onDelete }: Ap
                         href={`https://etherscan.io/address/${app.walletAddress}`}
                         target="_blank"
                         rel="noreferrer"
-                        className="hover:text-fintech-green flex items-center gap-1.5"
+                        className="hover:text-amber-400 flex items-center gap-1.5"
                       >
                         <span>{truncateWallet(app.walletAddress)}</span>
                         <ExternalLink className="w-3 h-3 text-slate-500" />
@@ -186,7 +190,7 @@ export function ApplicationsTable({ applications, onStatusChange, onDelete }: Ap
             <div className="space-y-3 font-mono text-xs text-slate-300">
               <div className="p-3 bg-obsidian-light rounded-xl border border-fintech-border">
                 <span className="text-fintech-subtext block text-[10px]">WALLET ADDRESS:</span>
-                <span className="text-fintech-green font-bold text-sm select-all">{selectedEntry.walletAddress}</span>
+                <span className="text-amber-400 font-bold text-sm select-all">{selectedEntry.walletAddress}</span>
               </div>
               <div className="p-3 bg-obsidian-light rounded-xl border border-fintech-border">
                 <span className="text-fintech-subtext block text-[10px]">X / TWITTER USERNAME:</span>
