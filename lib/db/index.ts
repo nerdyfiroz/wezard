@@ -50,15 +50,17 @@ declare global {
   var __WEZARD_ENTRIES_STORE__: schema.WhitelistEntry[] | undefined;
 }
 
+import { asc, eq } from "drizzle-orm";
+
 function loadPersistedTasks(): schema.Task[] {
-  if (globalThis.__WEZARD_TASKS_STORE__ && globalThis.__WEZARD_TASKS_STORE__.length > 0) {
+  if (globalThis.__WEZARD_TASKS_STORE__ !== undefined) {
     return globalThis.__WEZARD_TASKS_STORE__;
   }
   try {
     if (fs.existsSync(TMP_TASKS_FILE)) {
       const content = fs.readFileSync(TMP_TASKS_FILE, "utf-8");
       const parsed = JSON.parse(content);
-      if (Array.isArray(parsed) && parsed.length > 0) {
+      if (Array.isArray(parsed)) {
         globalThis.__WEZARD_TASKS_STORE__ = parsed;
         return parsed;
       }
@@ -112,6 +114,116 @@ function savePersistedEntries(entriesList: schema.WhitelistEntry[]) {
   } catch (err) {
     console.error("Error saving to /tmp entries file:", err);
   }
+}
+
+export async function getUnifiedTasks(): Promise<schema.Task[]> {
+  if (isDbConfigured && db) {
+    try {
+      let dbTasks = await db.select().from(schema.tasks).orderBy(asc(schema.tasks.sortOrder));
+      if (dbTasks.length === 0) {
+        try {
+          await db.insert(schema.tasks).values(
+            DEFAULT_TASKS.map((t) => ({
+              id: t.id,
+              title: t.title,
+              description: t.description,
+              type: t.type,
+              url: t.url || "",
+              required: t.required,
+              verificationType: t.verificationType,
+              active: t.active,
+              sortOrder: t.sortOrder,
+            }))
+          );
+          dbTasks = await db.select().from(schema.tasks).orderBy(asc(schema.tasks.sortOrder));
+        } catch (seedErr) {
+          console.error("DB auto-seed tasks error:", seedErr);
+        }
+      }
+      if (dbTasks.length > 0) {
+        return dbTasks;
+      }
+    } catch (dbErr) {
+      console.error("DB fetch tasks error:", dbErr);
+    }
+  }
+  return memoryStore.getTasks();
+}
+
+export async function addUnifiedTask(taskData: {
+  title: string;
+  description: string;
+  type: schema.Task["type"];
+  url?: string;
+  required: boolean;
+  verificationType: schema.Task["verificationType"];
+  active: boolean;
+  sortOrder: number;
+}) {
+  const newTaskInMemory = memoryStore.addTask({
+    title: taskData.title,
+    description: taskData.description,
+    type: taskData.type,
+    url: taskData.url || "",
+    required: taskData.required,
+    verificationType: taskData.verificationType,
+    active: taskData.active,
+    sortOrder: taskData.sortOrder,
+  });
+
+  if (isDbConfigured && db) {
+    try {
+      await db.insert(schema.tasks).values({
+        id: newTaskInMemory.id,
+        title: taskData.title,
+        description: taskData.description,
+        type: taskData.type,
+        url: taskData.url || "",
+        required: taskData.required,
+        verificationType: taskData.verificationType,
+        active: taskData.active,
+        sortOrder: taskData.sortOrder,
+      });
+    } catch (dbErr) {
+      console.error("DB insert task error:", dbErr);
+    }
+  }
+
+  const allTasks = await getUnifiedTasks();
+  return { newTask: newTaskInMemory, tasks: allTasks };
+}
+
+export async function updateUnifiedTask(id: string, updates: Partial<schema.Task>) {
+  const updatedInMemory = memoryStore.updateTask(id, updates);
+
+  if (isDbConfigured && db) {
+    try {
+      await db
+        .update(schema.tasks)
+        .set({ ...updates, updatedAt: new Date() })
+        .where(eq(schema.tasks.id, id));
+    } catch (dbErr) {
+      console.error("DB update task error:", dbErr);
+    }
+  }
+
+  const allTasks = await getUnifiedTasks();
+  return { task: updatedInMemory || updates, tasks: allTasks };
+}
+
+export async function deleteUnifiedTask(id: string) {
+  memoryStore.deleteTask(id);
+
+  if (isDbConfigured && db) {
+    try {
+      await db.delete(schema.tasks).where(eq(schema.tasks.id, id));
+    } catch (dbErr) {
+      console.error("DB delete task error:", dbErr);
+    }
+  }
+
+  const allTasks = await getUnifiedTasks();
+  return { tasks: allTasks };
 }
 
 class MemoryStore {

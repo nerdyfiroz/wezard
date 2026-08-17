@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { X, CheckSquare, Loader2 } from "lucide-react";
+import { X, CheckSquare, Loader2, AlertCircle } from "lucide-react";
 import { Task } from "@/lib/db/schema";
 
 interface TaskEditorModalProps {
@@ -21,8 +21,10 @@ export function TaskEditorModal({ isOpen, onClose, onSave, initialTask }: TaskEd
   const [verificationType, setVerificationType] = useState<Task["verificationType"]>("url");
   const [sortOrder, setSortOrder] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    setError(null);
     if (initialTask) {
       setTitle(initialTask.title);
       setDescription(initialTask.description);
@@ -46,6 +48,7 @@ export function TaskEditorModal({ isOpen, onClose, onSave, initialTask }: TaskEd
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
     setLoading(true);
     try {
       await onSave({
@@ -60,8 +63,9 @@ export function TaskEditorModal({ isOpen, onClose, onSave, initialTask }: TaskEd
       });
       setLoading(false);
       onClose();
-    } catch (err) {
+    } catch (err: any) {
       setLoading(false);
+      setError(err?.message || "Failed to save task. Please try again.");
     }
   };
 
@@ -81,6 +85,13 @@ export function TaskEditorModal({ isOpen, onClose, onSave, initialTask }: TaskEd
             <X className="w-5 h-5" />
           </button>
         </div>
+
+        {error && (
+          <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 text-xs font-semibold flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 shrink-0" />
+            <span>{error}</span>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-4 text-xs font-sans">
           <div>

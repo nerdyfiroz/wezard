@@ -41,29 +41,28 @@ export default function AdminTasksPage() {
   };
 
   const handleSaveTask = async (taskData: Partial<Task>) => {
-    try {
-      if (editingTask) {
-        const res = await fetch(`/api/admin/tasks/${editingTask.id}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(taskData),
-        });
-        const data = await res.json();
-        if (data.tasks) setTasks(data.tasks);
-        else await fetchTasks();
-      } else {
-        const res = await fetch("/api/admin/tasks", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(taskData),
-        });
-        const data = await res.json();
-        if (data.tasks) setTasks(data.tasks);
-        else await fetchTasks();
-      }
-    } catch (err) {
-      console.error("Error saving task:", err);
+    let res: Response;
+    if (editingTask) {
+      res = await fetch(`/api/admin/tasks/${editingTask.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(taskData),
+      });
+    } else {
+      res = await fetch("/api/admin/tasks", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(taskData),
+      });
     }
+
+    const data = await res.json();
+    if (!res.ok || data.error) {
+      throw new Error(data.error || "Failed to save task");
+    }
+
+    if (data.tasks) setTasks(data.tasks);
+    else await fetchTasks();
   };
 
   const handleDelete = async (id: string) => {
@@ -71,10 +70,15 @@ export default function AdminTasksPage() {
     try {
       const res = await fetch(`/api/admin/tasks/${id}`, { method: "DELETE" });
       const data = await res.json();
-      if (data.tasks) setTasks(data.tasks);
-      else await fetchTasks();
-    } catch (err) {
+      if (res.ok && data.tasks) {
+        setTasks(data.tasks);
+      } else {
+        alert(data.error || "Failed to delete task");
+        await fetchTasks();
+      }
+    } catch (err: any) {
       console.error("Failed to delete task:", err);
+      alert(err?.message || "Failed to delete task");
     }
   };
 
@@ -86,9 +90,13 @@ export default function AdminTasksPage() {
         body: JSON.stringify({ active: !task.active }),
       });
       const data = await res.json();
-      if (data.tasks) setTasks(data.tasks);
-      else await fetchTasks();
-    } catch (err) {
+      if (res.ok && data.tasks) {
+        setTasks(data.tasks);
+      } else {
+        alert(data.error || "Failed to toggle task active state");
+        await fetchTasks();
+      }
+    } catch (err: any) {
       console.error("Error toggling active state:", err);
     }
   };
