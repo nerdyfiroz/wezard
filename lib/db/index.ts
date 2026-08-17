@@ -141,6 +141,7 @@ export async function getUnifiedTasks(): Promise<schema.Task[]> {
         }
       }
       if (dbTasks.length > 0) {
+        savePersistedTasks(dbTasks);
         return dbTasks;
       }
     } catch (dbErr) {

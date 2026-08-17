@@ -22,6 +22,12 @@ export default function AdminTasksPage() {
       if (res.ok) {
         const data = await res.json();
         setTasks(data.tasks || []);
+      } else {
+        const data = await res.json().catch(() => ({}));
+        console.error("Failed to load tasks:", data.error || res.statusText);
+        if (res.status === 401) {
+          window.location.href = "/admin/login";
+        }
       }
     } catch (err) {
       console.error("Failed to load tasks:", err);
