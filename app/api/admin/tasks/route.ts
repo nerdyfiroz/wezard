@@ -5,7 +5,7 @@ import { db, isDbConfigured, memoryStore, DEFAULT_TASKS } from "@/lib/db";
 import { tasks } from "@/lib/db/schema";
 import { asc } from "drizzle-orm";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   const session = await getAdminSessionFromCookies();
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -37,10 +37,21 @@ export async function GET() {
 
       return NextResponse.json({ tasks: allTasks });
     } else {
-      if (!memoryStore.tasks || memoryStore.tasks.length === 0) {
-        memoryStore.tasks = [...DEFAULT_TASKS];
+      const customCookie = req.cookies.get("wezard_custom_tasks")?.value;
+      let allTasks = memoryStore.getTasks();
+
+      if (customCookie) {
+        try {
+          const parsed = JSON.parse(customCookie);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            allTasks = parsed;
+            memoryStore.tasks = parsed;
+          }
+        } catch (err) {
+          console.error("Error parsing custom tasks cookie:", err);
+        }
       }
-      const allTasks = memoryStore.getTasks();
+
       return NextResponse.json({ tasks: allTasks });
     }
   } catch (error) {
@@ -82,6 +93,17 @@ export async function POST(req: NextRequest) {
 
       return NextResponse.json({ success: true, task: newTask });
     } else {
+      // Check existing custom tasks cookie
+      const customCookie = req.cookies.get("wezard_custom_tasks")?.value;
+      if (customCookie) {
+        try {
+          const parsed = JSON.parse(customCookie);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            memoryStore.tasks = parsed;
+          }
+        } catch (e) {}
+      }
+
       const newTask = memoryStore.addTask({
         title: taskData.title,
         description: taskData.description,
@@ -93,7 +115,17 @@ export async function POST(req: NextRequest) {
         sortOrder: taskData.sortOrder,
       });
 
-      return NextResponse.json({ success: true, task: newTask });
+      const updatedTasksList = memoryStore.getTasks();
+      const response = NextResponse.json({ success: true, task: newTask, tasks: updatedTasksList });
+
+      // Set cookie so tasks persist across serverless instances
+      response.cookies.set("wezard_custom_tasks", JSON.stringify(updatedTasksList), {
+        path: "/",
+        maxAge: 31536000,
+        sameSite: "lax",
+      });
+
+      return response;
     }
   } catch (error) {
     console.error("Failed to create task:", error);

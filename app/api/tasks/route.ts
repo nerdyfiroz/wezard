@@ -1,9 +1,9 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { db, isDbConfigured, memoryStore, DEFAULT_TASKS } from "@/lib/db";
 import { tasks } from "@/lib/db/schema";
 import { eq, asc } from "drizzle-orm";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
     if (isDbConfigured && db) {
       let activeTasks = await db
@@ -38,10 +38,23 @@ export async function GET() {
 
       return NextResponse.json({ tasks: activeTasks });
     } else {
-      if (!memoryStore.tasks || memoryStore.tasks.length === 0) {
-        memoryStore.tasks = [...DEFAULT_TASKS];
+      // Check for persistent custom tasks cookie
+      const customCookie = req.cookies.get("wezard_custom_tasks")?.value;
+      let allTasks = memoryStore.getTasks();
+
+      if (customCookie) {
+        try {
+          const parsed = JSON.parse(customCookie);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            allTasks = parsed;
+            memoryStore.tasks = parsed;
+          }
+        } catch (err) {
+          console.error("Error parsing custom tasks cookie:", err);
+        }
       }
-      const activeTasks = memoryStore.getTasks().filter((t) => t.active);
+
+      const activeTasks = allTasks.filter((t) => t.active);
       return NextResponse.json({ tasks: activeTasks });
     }
   } catch (error) {

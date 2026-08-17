@@ -48,14 +48,18 @@ export default function AdminTasksPage() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(taskData),
         });
-        if (res.ok) await fetchTasks();
+        const data = await res.json();
+        if (data.tasks) setTasks(data.tasks);
+        else await fetchTasks();
       } else {
         const res = await fetch("/api/admin/tasks", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(taskData),
         });
-        if (res.ok) await fetchTasks();
+        const data = await res.json();
+        if (data.tasks) setTasks(data.tasks);
+        else await fetchTasks();
       }
     } catch (err) {
       console.error("Error saving task:", err);
@@ -66,7 +70,9 @@ export default function AdminTasksPage() {
     if (!confirm("Are you sure you want to delete this task?")) return;
     try {
       const res = await fetch(`/api/admin/tasks/${id}`, { method: "DELETE" });
-      if (res.ok) await fetchTasks();
+      const data = await res.json();
+      if (data.tasks) setTasks(data.tasks);
+      else await fetchTasks();
     } catch (err) {
       console.error("Failed to delete task:", err);
     }
@@ -79,7 +85,9 @@ export default function AdminTasksPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ active: !task.active }),
       });
-      if (res.ok) await fetchTasks();
+      const data = await res.json();
+      if (data.tasks) setTasks(data.tasks);
+      else await fetchTasks();
     } catch (err) {
       console.error("Error toggling active state:", err);
     }
@@ -94,7 +102,7 @@ export default function AdminTasksPage() {
         </div>
         <button
           onClick={handleCreateNew}
-          className="px-4 py-2.5 rounded-xl text-xs font-bold text-obsidian bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-500 hover:from-yellow-300 hover:to-amber-400 transition-colors shadow-lg shadow-amber-500/20 flex items-center gap-2"
+          className="px-4 py-2.5 rounded-xl text-xs font-bold text-obsidian bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-500 hover:from-yellow-300 hover:to-amber-400 transition-colors shadow-lg shadow-amber-500/20 flex items-center gap-2 font-pixel"
         >
           <Plus className="w-4 h-4 stroke-[3]" />
           <span>Create New Task</span>
@@ -112,7 +120,7 @@ export default function AdminTasksPage() {
             <p className="text-slate-400 text-xs font-mono">No tasks currently configured.</p>
             <button
               onClick={handleCreateNew}
-              className="px-4 py-2 rounded-xl text-xs font-bold text-obsidian bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-500 hover:from-yellow-300 hover:to-amber-400 transition-colors shadow-md shadow-amber-500/20 inline-flex items-center gap-2"
+              className="px-4 py-2 rounded-xl text-xs font-bold text-obsidian bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-500 hover:from-yellow-300 hover:to-amber-400 transition-colors shadow-md shadow-amber-500/20 inline-flex items-center gap-2 font-pixel"
             >
               <Plus className="w-4 h-4" />
               <span>Create First Task</span>
