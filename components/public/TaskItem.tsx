@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Check, Sparkles, Globe, Wallet, Link2, AlertCircle, ExternalLink } from "lucide-react";
+import { Check, Sparkles, Globe, Wallet, AlertCircle } from "lucide-react";
 import { Task } from "@/lib/db/schema";
 import { XLogo } from "./Navbar";
 
@@ -33,28 +33,18 @@ export function TaskItem({
     task.title.toLowerCase().includes("comment") ||
     task.description.toLowerCase().includes("comment");
 
-  // Determine proof label based on task type
-  let defaultProofLabel = "Submit Task Proof Link";
+  // Determine placeholder based on task type
   let defaultPlaceholder = "https://x.com/... (paste link or proof)";
 
   if (isCombinedFollow || task.type === "x_follow") {
-    defaultProofLabel = "Submit your X Handle";
     defaultPlaceholder = "@yourusername (or profile link)";
   } else if (isComment) {
-    defaultProofLabel = "Submit your Comment link";
     defaultPlaceholder = "https://x.com/.../status/... (comment link)";
   } else if (isLikeRepost) {
-    defaultProofLabel = "Submit your Retweet link";
     defaultPlaceholder = "https://x.com/.../status/... (retweet/quote link)";
   } else if (task.type === "submit_wallet") {
-    defaultProofLabel = "Submit your EVM Wallet Address";
     defaultPlaceholder = "0x1234567890abcdef1234567890abcdef12345678";
   }
-
-  const proofLabelText =
-    task.proofLabel && task.proofLabel.trim().length > 0
-      ? task.proofLabel
-      : defaultProofLabel;
 
   const hasProofBox = task.proofLabel !== "__disabled__";
   const isProofFilled =
@@ -75,7 +65,7 @@ export function TaskItem({
     }
   };
 
-  // Render Title with embedded links for usernames / actions
+  // Render Title with embedded links (No ExternalLink icons)
   const renderInteractiveTitle = () => {
     if (
       task.title.includes("@We_Zards") &&
@@ -92,9 +82,9 @@ export function TaskItem({
               e.stopPropagation();
               onVisitTask(task.id, "https://x.com/We_Zards");
             }}
-            className="text-amber-300 hover:text-amber-200 underline decoration-amber-400/50 hover:decoration-amber-300 transition-colors inline-flex items-center gap-0.5"
+            className="text-amber-300 hover:text-amber-200 underline decoration-amber-400/50 hover:decoration-amber-300 transition-colors"
           >
-            @We_Zards <ExternalLink className="w-3 h-3 inline opacity-70" />
+            @We_Zards
           </a>{" "}
           and{" "}
           <a
@@ -105,9 +95,9 @@ export function TaskItem({
               e.stopPropagation();
               onVisitTask(task.id, "https://x.com/SickickZards");
             }}
-            className="text-amber-300 hover:text-amber-200 underline decoration-amber-400/50 hover:decoration-amber-300 transition-colors inline-flex items-center gap-0.5"
+            className="text-amber-300 hover:text-amber-200 underline decoration-amber-400/50 hover:decoration-amber-300 transition-colors"
           >
-            @SickickZards <ExternalLink className="w-3 h-3 inline opacity-70" />
+            @SickickZards
           </a>
         </span>
       );
@@ -129,9 +119,9 @@ export function TaskItem({
               e.stopPropagation();
               onVisitTask(task.id, targetUrl);
             }}
-            className="text-amber-300 hover:text-amber-200 underline decoration-amber-400/50 hover:decoration-amber-300 transition-colors inline-flex items-center gap-1"
+            className="text-amber-300 hover:text-amber-200 underline decoration-amber-400/50 hover:decoration-amber-300 transition-colors"
           >
-            {task.title} <ExternalLink className="w-3.5 h-3.5 inline opacity-70" />
+            {task.title}
           </a>
         </span>
       );
@@ -149,9 +139,9 @@ export function TaskItem({
               e.stopPropagation();
               onVisitTask(task.id, targetUrl);
             }}
-            className="text-amber-300 hover:text-amber-200 underline decoration-amber-400/50 hover:decoration-amber-300 transition-colors inline-flex items-center gap-1"
+            className="text-amber-300 hover:text-amber-200 underline decoration-amber-400/50 hover:decoration-amber-300 transition-colors"
           >
-            {task.title} <ExternalLink className="w-3.5 h-3.5 inline opacity-70" />
+            {task.title}
           </a>
         </span>
       );
@@ -168,9 +158,9 @@ export function TaskItem({
             e.stopPropagation();
             onVisitTask(task.id, task.url);
           }}
-          className="font-display font-bold text-base sm:text-lg text-amber-300 hover:text-amber-200 underline decoration-amber-400/50 hover:decoration-amber-300 transition-colors inline-flex items-center gap-1"
+          className="font-display font-bold text-base sm:text-lg text-amber-300 hover:text-amber-200 underline decoration-amber-400/50 hover:decoration-amber-300 transition-colors"
         >
-          {task.title} <ExternalLink className="w-3.5 h-3.5 inline opacity-70" />
+          {task.title}
         </a>
       );
     }
@@ -190,7 +180,7 @@ export function TaskItem({
           : "bg-fintech-card/80 border-fintech-border"
       }`}
     >
-      {/* Main Task Row (No Open Link button) */}
+      {/* Main Task Row */}
       <div className="p-4 sm:p-5 flex items-start gap-4 font-pixel">
         {/* Icon / Checkmark */}
         <div
@@ -230,25 +220,19 @@ export function TaskItem({
         </div>
       </div>
 
-      {/* ── Proof Box (underneath each task) ── */}
+      {/* ── Proof Box (underneath each task) with Off-White background & Glow ── */}
       {hasProofBox && (
         <div className="px-4 pb-4 sm:px-5 sm:pb-5">
-          <div
-            className={`rounded-xl border p-2.5 transition-all ${
-              proofValue.trim().length > 1
-                ? "border-cyan-400/40 bg-cyan-500/5"
-                : "border-fintech-border/60 bg-obsidian-light/40"
-            }`}
-          >
+          <div className="relative">
             <input
               type="text"
               value={proofValue}
               onChange={(e) => onProofChange(task.id, e.target.value)}
               placeholder={defaultPlaceholder}
-              className="w-full px-3 py-2.5 bg-obsidian border border-fintech-border/60 rounded-lg text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400/50 focus:ring-1 focus:ring-cyan-400/20 transition-all font-mono"
+              className="w-full px-3.5 py-2.5 bg-[#f4f4f6] text-[#111827] placeholder-slate-500 rounded-lg text-xs font-mono font-semibold border border-amber-400/40 shadow-[0_0_12px_rgba(245,158,11,0.18)] focus:outline-none focus:border-amber-400 focus:shadow-[0_0_18px_rgba(245,158,11,0.38)] focus:ring-1 focus:ring-amber-400 transition-all"
             />
             {task.proofRequired && isCompleted && proofValue.trim().length === 0 && (
-              <p className="mt-1.5 text-[10px] text-amber-400/80 flex items-center gap-1">
+              <p className="mt-1.5 text-[10px] text-amber-400/90 flex items-center gap-1">
                 <AlertCircle className="w-3 h-3" />
                 Proof required to complete this task
               </p>

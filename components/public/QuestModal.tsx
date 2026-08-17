@@ -274,25 +274,27 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
             </div>
 
             {/* ── EVM Wallet Address Box (Required) ── */}
-            <div className="p-4 rounded-xl border border-amber-400/30 bg-[#282b35]/80 space-y-2 font-sans shadow-lg shadow-black/20">
-              <label className="flex items-center justify-between text-xs font-bold text-amber-300">
-                <span className="flex items-center gap-1.5 font-display">
-                  <Wallet className="w-4 h-4 text-amber-400" />
-                  EVM Wallet Address
-                </span>
-                <span className="px-2 py-0.5 rounded bg-amber-400/20 text-amber-300 border border-amber-400/40 text-[10px] font-mono">
-                  REQUIRED
-                </span>
+            <div className="space-y-2 font-sans">
+              <label className="flex items-center gap-1.5 text-xs sm:text-sm font-display font-bold text-amber-300 tracking-wider">
+                <Wallet className="w-4 h-4 text-amber-400" />
+                <span>EVM WALLET ADDRESS</span>
+                <span className="text-amber-400 font-bold">*</span>
               </label>
 
-              <input
-                type="text"
-                required
-                value={walletAddress}
-                onChange={(e) => setWalletAddress(e.target.value.trim())}
-                placeholder="0x1234567890abcdef1234567890abcdef12345678"
-                className="w-full px-3.5 py-3 bg-[#181a22] border border-slate-700 rounded-lg text-sm text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400/30 font-mono transition-all"
-              />
+              <div className="relative">
+                <input
+                  type="text"
+                  required
+                  value={walletAddress}
+                  onChange={(e) => setWalletAddress(e.target.value.trim())}
+                  placeholder="0x1234567890abcdef1234567890abcdef12345678"
+                  className="w-full px-4 py-3 bg-[#f4f4f6] text-[#111827] placeholder-slate-500 rounded-xl text-xs sm:text-sm font-mono font-bold border border-amber-400/60 shadow-[0_0_18px_rgba(245,158,11,0.25)] focus:outline-none focus:border-amber-400 focus:shadow-[0_0_26px_rgba(245,158,11,0.45)] focus:ring-2 focus:ring-amber-400/40 transition-all"
+                />
+              </div>
+
+              <p className="text-[11px] text-slate-400 font-pixel">
+                Provide your Ethereum / EVM compatible wallet address (0x...) to receive whitelist allocation.
+              </p>
 
               {walletAddress.length > 0 && !evmAddressRegex.test(walletAddress) && (
                 <p className="text-[11px] text-amber-400/90 flex items-center gap-1">

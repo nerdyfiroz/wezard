@@ -78,7 +78,7 @@ export function MathCaptchaWidget({ onChallengeReady, refreshTrigger }: MathCapt
           {loading ? "..." : question || "7 + 8 = ?"}
         </div>
 
-        {/* Math Answer Input - GUARANTEED STANDARD NORMAL FONT */}
+        {/* Math Answer Input - Off-White with Glow */}
         <input
           type="number"
           required
@@ -86,7 +86,7 @@ export function MathCaptchaWidget({ onChallengeReady, refreshTrigger }: MathCapt
           value={userAnswer}
           onChange={(e) => handleAnswerChange(e.target.value)}
           style={{ fontFamily: standardFontFamily }}
-          className="flex-1 px-4 py-3 bg-fintech-card border border-fintech-border rounded-xl text-base font-semibold text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 transition-colors tracking-wide"
+          className="flex-1 px-4 py-3 bg-[#f4f4f6] text-[#111827] placeholder-slate-500 border border-amber-400/50 shadow-[0_0_12px_rgba(245,158,11,0.18)] rounded-xl text-base font-bold focus:outline-none focus:border-amber-400 focus:shadow-[0_0_18px_rgba(245,158,11,0.38)] transition-all tracking-wide"
         />
       </div>
     </div>
