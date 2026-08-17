@@ -1,9 +1,10 @@
 "use client";
 
 import React, { useState } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Sparkles, Lock, User, Key, AlertCircle, Loader2 } from "lucide-react";
+import { Lock, User, Key, AlertCircle, Loader2 } from "lucide-react";
 
 export default function AdminLoginPage() {
   const [username, setUsername] = useState("");
@@ -42,7 +43,7 @@ export default function AdminLoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-obsidian relative overflow-hidden">
       {/* Glow background */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-fintech-green/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
 
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -52,13 +53,21 @@ export default function AdminLoginPage() {
       >
         {/* Brand Header */}
         <div className="flex flex-col items-center text-center mb-8">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-fintech-green to-arcane-purple p-0.5 shadow-lg shadow-fintech-green/20 mb-4">
-            <div className="w-full h-full bg-obsidian rounded-[10px] flex items-center justify-center">
-              <Sparkles className="w-6 h-6 text-fintech-green" />
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-300 via-yellow-500 to-amber-600 p-0.5 shadow-lg shadow-amber-500/20 mb-4">
+            <div className="w-full h-full bg-obsidian rounded-[14px] flex items-center justify-center p-1 overflow-hidden">
+              <Image
+                src="/Wizeffgmbers.png"
+                alt="WeZards Logo"
+                width={48}
+                height={48}
+                className="w-full h-full object-contain"
+              />
             </div>
           </div>
-          <h1 className="font-display font-bold text-2xl text-white">WeZards Sanctum</h1>
-          <p className="text-xs text-fintech-subtext mt-1 font-mono">Restricted Admin Authentication</p>
+          <h1 className="font-display font-bold text-2xl bg-clip-text text-transparent bg-gradient-to-r from-amber-200 via-yellow-400 to-amber-500">
+            WeZards Sanctum
+          </h1>
+          <p className="text-xs text-amber-300/80 mt-1 font-mono font-medium">Restricted Admin Authentication</p>
         </div>
 
         {errorMsg && (
@@ -81,7 +90,7 @@ export default function AdminLoginPage() {
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 placeholder="admin"
-                className="w-full pl-10 pr-4 py-2.5 bg-obsidian-light border border-fintech-border rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-fintech-green transition-colors font-mono"
+                className="w-full pl-10 pr-4 py-2.5 bg-obsidian-light border border-fintech-border rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 transition-colors font-mono"
               />
             </div>
           </div>
@@ -98,7 +107,7 @@ export default function AdminLoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••••••"
-                className="w-full pl-10 pr-4 py-2.5 bg-obsidian-light border border-fintech-border rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-fintech-green transition-colors font-mono"
+                className="w-full pl-10 pr-4 py-2.5 bg-obsidian-light border border-fintech-border rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 transition-colors font-mono"
               />
             </div>
           </div>
@@ -106,7 +115,7 @@ export default function AdminLoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3.5 rounded-xl font-display font-bold text-sm tracking-wider text-obsidian bg-fintech-green hover:bg-fintech-green-hover transition-all duration-200 shadow-lg shadow-fintech-green/25 flex items-center justify-center gap-2"
+            className="w-full py-3.5 rounded-xl font-display font-bold text-sm tracking-wider text-obsidian bg-gradient-to-r from-fintech-green to-emerald-400 hover:from-emerald-400 hover:to-fintech-green transition-all duration-200 shadow-lg shadow-fintech-green/25 flex items-center justify-center gap-2"
           >
             {loading ? (
               <>

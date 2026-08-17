@@ -7,18 +7,18 @@ import { Sparkles, ArrowRight, Shield, Zap, Award } from "lucide-react";
 export function Hero({ onOpenQuests }: { onOpenQuests: () => void }) {
   return (
     <section className="relative pt-12 pb-20 md:pt-20 md:pb-32 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto flex flex-col items-center text-center z-10">
-      {/* Top Ethereal Badge */}
+      {/* Top Ethereal Golden Badge */}
       <motion.div
         initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-fintech-card/90 border border-fintech-green/30 text-fintech-green text-xs font-mono mb-8 shadow-lg shadow-fintech-green/10"
+        className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-mono mb-8 shadow-lg shadow-amber-500/10"
       >
-        <Sparkles className="w-3.5 h-3.5 animate-pulse" />
-        <span className="tracking-widest uppercase text-[11px] font-medium">WEZARDS INITIATION PHASE I</span>
+        <Sparkles className="w-3.5 h-3.5 animate-pulse text-yellow-400" />
+        <span className="tracking-widest uppercase text-[11px] font-semibold text-amber-200">WEZARDS INITIATION PHASE I</span>
       </motion.div>
 
-      {/* Main Headline */}
+      {/* Main Headline with Mixed Golden Letters */}
       <motion.h1
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -26,7 +26,7 @@ export function Hero({ onOpenQuests }: { onOpenQuests: () => void }) {
         className="font-display text-4xl sm:text-6xl md:text-7xl font-extrabold tracking-tight text-white max-w-4xl leading-[1.1]"
       >
         Enter the{" "}
-        <span className="bg-clip-text text-transparent bg-gradient-to-r from-fintech-green via-emerald-300 to-arcane-purple drop-shadow-sm">
+        <span className="bg-clip-text text-transparent bg-gradient-to-r from-amber-200 via-yellow-400 to-amber-500 drop-shadow-md">
           WeZards Circle
         </span>
       </motion.h1>
@@ -69,8 +69,8 @@ export function Hero({ onOpenQuests }: { onOpenQuests: () => void }) {
         transition={{ duration: 0.7, delay: 0.4 }}
         className="mt-16 grid grid-cols-1 sm:grid-cols-3 gap-4 w-full max-w-4xl text-left"
       >
-        <div className="p-5 rounded-2xl bg-fintech-card/60 border border-fintech-border backdrop-blur-sm hover:border-fintech-green/30 transition-colors">
-          <div className="w-10 h-10 rounded-xl bg-fintech-green/10 flex items-center justify-center text-fintech-green mb-3">
+        <div className="p-5 rounded-2xl bg-fintech-card/60 border border-fintech-border backdrop-blur-sm hover:border-amber-500/30 transition-colors">
+          <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-400 mb-3">
             <Shield className="w-5 h-5" />
           </div>
           <h3 className="font-display font-semibold text-white text-base">Verified Access</h3>
@@ -89,8 +89,8 @@ export function Hero({ onOpenQuests }: { onOpenQuests: () => void }) {
           </p>
         </div>
 
-        <div className="p-5 rounded-2xl bg-fintech-card/60 border border-fintech-border backdrop-blur-sm hover:border-arcane-gold/30 transition-colors">
-          <div className="w-10 h-10 rounded-xl bg-arcane-gold/10 flex items-center justify-center text-arcane-gold mb-3">
+        <div className="p-5 rounded-2xl bg-fintech-card/60 border border-fintech-border backdrop-blur-sm hover:border-amber-500/30 transition-colors">
+          <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-400 mb-3">
             <Award className="w-5 h-5" />
           </div>
           <h3 className="font-display font-semibold text-white text-base">Sanctum Slot</h3>

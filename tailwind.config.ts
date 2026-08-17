@@ -28,6 +28,8 @@ const config: Config = {
           purple: "#8B5CF6",
           cyan: "#06B6D4",
           gold: "#F59E0B",
+          "gold-light": "#FDE68A",
+          "gold-dark": "#D97706",
           pink: "#EC4899",
         },
       },
@@ -43,8 +45,8 @@ const config: Config = {
       },
       keyframes: {
         glowPulse: {
-          "0%, 100%": { opacity: "0.4", filter: "drop-shadow(0 0 15px rgba(16, 185, 129, 0.4))" },
-          "50%": { opacity: "0.8", filter: "drop-shadow(0 0 25px rgba(139, 92, 246, 0.6))" },
+          "0%, 100%": { opacity: "0.4", filter: "drop-shadow(0 0 15px rgba(245, 158, 11, 0.4))" },
+          "50%": { opacity: "0.8", filter: "drop-shadow(0 0 25px rgba(253, 230, 138, 0.6))" },
         },
         float: {
           "0%, 100%": { transform: "translateY(0px)" },
