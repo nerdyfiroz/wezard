@@ -24,9 +24,9 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     const { task, tasks } = await updateUnifiedTask(params.id, updates);
 
     return NextResponse.json({ task, tasks });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Task update error:", error);
-    return NextResponse.json({ error: "Failed to update task" }, { status: 500 });
+    return NextResponse.json({ error: error?.message || "Failed to update task" }, { status: 500 });
   }
 }
 
@@ -40,8 +40,8 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
     const { tasks } = await deleteUnifiedTask(params.id);
 
     return NextResponse.json({ success: true, tasks });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Task delete error:", error);
-    return NextResponse.json({ error: "Failed to delete task" }, { status: 500 });
+    return NextResponse.json({ error: error?.message || "Failed to delete task" }, { status: 500 });
   }
 }

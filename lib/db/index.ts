@@ -16,41 +16,36 @@ let migrationRan = false;
 
 async function ensureMigrated() {
   if (migrationRan || !db) return;
-  migrationRan = true;
   try {
-    // Add proof columns if they don't exist (idempotent)
-    await db.execute(sql`ALTER TABLE tasks ADD COLUMN IF NOT EXISTS proof_label VARCHAR(255)`);
-    await db.execute(sql`ALTER TABLE tasks ADD COLUMN IF NOT EXISTS proof_required BOOLEAN NOT NULL DEFAULT false`);
-
-    // Backfill proof labels for existing default tasks if they were null
-    await db.execute(sql`
-      UPDATE tasks 
-      SET proof_label = 'Submit your X / Twitter handle or profile link' 
-      WHERE id = '7d9e4a1b-3c2f-4e8a-9b1d-5f6e7a8b9c0d' AND (proof_label IS NULL OR proof_label = '');
-    `);
-    await db.execute(sql`
-      UPDATE tasks 
-      SET proof_label = 'Paste your reply or comment tweet link', proof_required = true
-      WHERE id = 'a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d' AND (proof_label IS NULL OR proof_label = '');
-    `);
-
-    // Insert 3rd default task if only 2 exist
-    const existingCount = await db.select().from(schema.tasks);
-    if (existingCount.length === 2) {
-      await db.insert(schema.tasks).values({
-        id: "c3d4e5f6-7a8b-9c0d-1e2f-3a4b5c6d7e8f",
-        title: "Join Community & Share the WeZards Quest",
-        description: "Spread the magic, tag your wizard crew or quote the official announcement.",
-        type: "x_repost",
-        url: "https://x.com/We_Zards",
-        required: true,
-        verificationType: "url",
-        active: true,
-        sortOrder: 3,
-        proofLabel: "Submit your quote tweet / proof link",
-        proofRequired: true,
-      });
+    // 1. Add proof columns safely
+    try {
+      await db.execute(sql`ALTER TABLE tasks ADD COLUMN IF NOT EXISTS proof_label VARCHAR(255)`);
+    } catch (e) {
+      console.error("proof_label column migration notice:", e);
     }
+    try {
+      await db.execute(sql`ALTER TABLE tasks ADD COLUMN IF NOT EXISTS proof_required BOOLEAN NOT NULL DEFAULT false`);
+    } catch (e) {
+      console.error("proof_required column migration notice:", e);
+    }
+
+    // 2. Backfill proof labels for existing default tasks if they were null
+    try {
+      await db.execute(sql`
+        UPDATE tasks 
+        SET proof_label = 'Submit your X / Twitter handle or profile link' 
+        WHERE id = '7d9e4a1b-3c2f-4e8a-9b1d-5f6e7a8b9c0d' AND (proof_label IS NULL OR proof_label = '');
+      `);
+      await db.execute(sql`
+        UPDATE tasks 
+        SET proof_label = 'Paste your reply or comment tweet link', proof_required = true
+        WHERE id = 'a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d' AND (proof_label IS NULL OR proof_label = '');
+      `);
+    } catch (e) {
+      console.error("Backfill migration notice:", e);
+    }
+
+    migrationRan = true;
   } catch (err) {
     console.error("Auto-migration notice:", err);
   }
@@ -166,6 +161,7 @@ export async function addUnifiedTask(taskData: {
   const newId = crypto.randomUUID();
 
   if (isDbConfigured && db) {
+    await ensureMigrated();
     const [newTask] = await db
       .insert(schema.tasks)
       .values({
@@ -209,6 +205,7 @@ export async function addUnifiedTask(taskData: {
 // ─── updateUnifiedTask ───────────────────────────────────────────────────────
 export async function updateUnifiedTask(id: string, updates: Partial<schema.Task>) {
   if (isDbConfigured && db) {
+    await ensureMigrated();
     const [updatedTask] = await db
       .update(schema.tasks)
       .set({ ...updates, updatedAt: new Date() })
@@ -226,6 +223,7 @@ export async function updateUnifiedTask(id: string, updates: Partial<schema.Task
 // ─── deleteUnifiedTask ───────────────────────────────────────────────────────
 export async function deleteUnifiedTask(id: string) {
   if (isDbConfigured && db) {
+    await ensureMigrated();
     await db.delete(schema.tasks).where(eq(schema.tasks.id, id));
     const allTasks = await getUnifiedTasks();
     return { tasks: allTasks };
