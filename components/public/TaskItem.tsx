@@ -222,9 +222,11 @@ export function TaskItem({
             )}
           </div>
 
-          <p className="text-xs sm:text-sm text-fintech-subtext mt-1.5 leading-relaxed font-pixel">
-            {task.description}
-          </p>
+          {task.description && task.description.trim().length > 0 && (
+            <p className="text-xs sm:text-sm text-fintech-subtext mt-1.5 leading-relaxed font-pixel">
+              {task.description}
+            </p>
+          )}
         </div>
       </div>
 

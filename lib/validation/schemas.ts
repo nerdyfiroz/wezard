@@ -26,8 +26,8 @@ export const whitelistSubmitSchema = z.object({
 });
 
 export const taskSchema = z.object({
-  title: z.string().trim().min(3, "Title must be at least 3 characters").max(255),
-  description: z.string().trim().min(5, "Description must be at least 5 characters"),
+  title: z.string().trim().min(2, "Title must be at least 2 characters").max(255),
+  description: z.string().trim().optional().default("").or(z.literal("")),
   type: z.enum(["x_follow", "x_like", "x_repost", "visit_url", "submit_wallet", "custom"]),
   url: z.string().trim().optional().or(z.literal("")),
   required: z.boolean(),

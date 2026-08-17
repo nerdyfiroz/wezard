@@ -121,17 +121,16 @@ export function TaskEditorModal({ isOpen, onClose, onSave, initialTask }: TaskEd
             />
           </div>
 
-          {/* Description */}
+          {/* Description (Optional) */}
           <div>
             <label className="block text-slate-300 font-semibold mb-1.5">
-              Description <span className="text-amber-400">*</span>
+              Description <span className="text-slate-500 font-normal">(Optional)</span>
             </label>
             <textarea
-              required
               rows={2}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Detailed instructions for the user..."
+              placeholder="Instructions for the user (optional)..."
               className="w-full px-3 py-2.5 bg-obsidian-light border border-fintech-border rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400/30 transition-all resize-none"
             />
           </div>
