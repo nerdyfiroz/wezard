@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { CinematicLoader } from "@/components/public/CinematicLoader";
 import { WizardBackground } from "@/components/public/WizardBackground";
 import { Navbar } from "@/components/public/Navbar";
 import { Hero } from "@/components/public/Hero";
@@ -26,29 +27,32 @@ export default function HomePage() {
 
   return (
     <main className="min-h-screen bg-obsidian text-slate-100 relative flex flex-col justify-between selection:bg-fintech-green selection:text-obsidian overflow-x-hidden">
-      {/* Dynamic Animated Canvas Particle Background */}
+      {/* ── Cinematic Entry Loader using Wand (Wizenedfdfdw newrs.png) ── */}
+      <CinematicLoader />
+
+      {/* ── Wizard Grey Background ── */}
       <WizardBackground />
 
-      {/* Main Public App Header */}
+      {/* ── Main Public App Header ── */}
       <Navbar onOpenQuests={handleOpenQuests} />
 
-      {/* Hero Section */}
+      {/* ── Hero Section ── */}
       <Hero onOpenQuests={handleOpenQuests} />
 
-      {/* About / Lore Section */}
+      {/* ── About / Lore Section ── */}
       <About />
 
-      {/* Footer */}
+      {/* ── Footer ── */}
       <Footer />
 
-      {/* Quests Step Modal */}
+      {/* ── Quests Step Modal ── */}
       <QuestModal
         isOpen={isQuestOpen}
         onClose={() => setIsQuestOpen(false)}
         onSuccess={handleQuestSuccess}
       />
 
-      {/* Initiation Confirmation Modal */}
+      {/* ── Initiation Confirmation Modal ── */}
       <SuccessModal
         isOpen={isSuccessOpen}
         onClose={() => setIsSuccessOpen(false)}
