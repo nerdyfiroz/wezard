@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { ShieldCheck, Info } from "lucide-react";
+import { ShieldCheck, Info, ChevronDown, ExternalLink } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 export function XLogo({ className = "w-4 h-4" }: { className?: string }) {
@@ -16,6 +16,7 @@ export function XLogo({ className = "w-4 h-4" }: { className?: string }) {
 
 export function Navbar({ onOpenQuests }: { onOpenQuests: () => void }) {
   const [showOpenSeaToast, setShowOpenSeaToast] = useState(false);
+  const [isXDropdownOpen, setIsXDropdownOpen] = useState(false);
 
   const handleOpenSeaClick = () => {
     setShowOpenSeaToast(true);
@@ -50,46 +51,83 @@ export function Navbar({ onOpenQuests }: { onOpenQuests: () => void }) {
 
         {/* Live Status & Social Links */}
         <div className="flex items-center gap-3 sm:gap-4">
-          {/* Social Links with Real X Icon */}
-          <div className="hidden md:flex items-center gap-2">
-            {/* Project X */}
-            <a
-              href="https://x.com/We_Zards"
-              target="_blank"
-              rel="noreferrer"
-              className="p-2 rounded-xl bg-fintech-card border border-fintech-border text-slate-200 hover:text-white hover:border-amber-400/40 transition-colors flex items-center gap-1.5"
-              title="Project X (@We_Zards)"
+          {/* X Dropdown Menu Button */}
+          <div
+            className="relative"
+            onMouseEnter={() => setIsXDropdownOpen(true)}
+            onMouseLeave={() => setIsXDropdownOpen(false)}
+          >
+            <button
+              onClick={() => setIsXDropdownOpen((prev) => !prev)}
+              className="px-3 py-2 rounded-xl bg-fintech-card border border-fintech-border text-slate-200 hover:text-amber-300 hover:border-amber-400/40 transition-all flex items-center gap-2 shadow-sm font-pixel"
+              title="Official X / Twitter Links"
             >
               <XLogo className="w-4 h-4 text-white" />
-              <span className="text-xs font-pixel">Project</span>
-            </a>
-
-            {/* Artist X */}
-            <a
-              href="https://x.com/SickickZards"
-              target="_blank"
-              rel="noreferrer"
-              className="p-2 rounded-xl bg-fintech-card border border-fintech-border text-slate-200 hover:text-amber-300 hover:border-amber-400/40 transition-colors flex items-center gap-1.5"
-              title="Artist X (@SickickZards)"
-            >
-              <XLogo className="w-4 h-4 text-amber-400" />
-              <span className="text-xs font-pixel">Artist</span>
-            </a>
-
-            {/* OpenSea */}
-            <button
-              onClick={handleOpenSeaClick}
-              className="p-2 rounded-xl bg-fintech-card border border-fintech-border text-slate-200 hover:text-blue-400 hover:border-blue-400/40 transition-colors flex items-center gap-1.5"
-              title="OpenSea Collection (Coming Soon)"
-            >
-              <svg className="w-4 h-4 fill-[#2081E2]" viewBox="0 0 24 24">
-                <path d="M12 0C5.37 0 0 5.37 0 12s5.37 12 12 12 12-5.37 12-12S18.63 0 12 0zm5.95 12.82l-3.32 4.41c-.42.56-1.12.89-1.83.89H8.46c-.66 0-1.28-.27-1.74-.75l-2.07-2.17a2.38 2.38 0 0 1-.65-1.63V8.89c0-.66.27-1.29.75-1.75l2.17-2.07c.46-.44 1.09-.67 1.74-.67h4.08c.66 0 1.28.27 1.74.75l2.07 2.17c.44.46.67 1.09.67 1.74v4.68c0 .38-.1.74-.27 1.08z" />
-              </svg>
-              <span className="text-xs font-pixel">OpenSea</span>
+              <span className="text-xs hidden sm:inline">Official X</span>
+              <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${isXDropdownOpen ? "rotate-180 text-amber-300" : "text-slate-400"}`} />
             </button>
+
+            {/* Hover / Tap Dropdown Menu */}
+            <AnimatePresence>
+              {isXDropdownOpen && (
+                <motion.div
+                  initial={{ opacity: 0, y: 8, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 8, scale: 0.95 }}
+                  transition={{ duration: 0.15 }}
+                  className="absolute right-0 mt-2 w-56 rounded-2xl bg-obsidian-light border border-fintech-border shadow-2xl p-2 z-50 font-pixel"
+                >
+                  <a
+                    href="https://x.com/We_Zards"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex items-center justify-between p-2.5 rounded-xl hover:bg-amber-400/10 text-slate-200 hover:text-white transition-colors group"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <XLogo className="w-4 h-4 text-white" />
+                      <div className="flex flex-col">
+                        <span className="text-xs font-bold">Project X</span>
+                        <span className="text-[10px] text-slate-400 font-mono">@We_Zards</span>
+                      </div>
+                    </div>
+                    <ExternalLink className="w-3.5 h-3.5 text-slate-400 group-hover:text-amber-300" />
+                  </a>
+
+                  <div className="my-1 border-t border-fintech-border/50" />
+
+                  <a
+                    href="https://x.com/SickickZards"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex items-center justify-between p-2.5 rounded-xl hover:bg-amber-400/10 text-slate-200 hover:text-amber-300 transition-colors group"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <XLogo className="w-4 h-4 text-amber-400" />
+                      <div className="flex flex-col">
+                        <span className="text-xs font-bold">Artist X</span>
+                        <span className="text-[10px] text-slate-400 font-mono">@SickickZards</span>
+                      </div>
+                    </div>
+                    <ExternalLink className="w-3.5 h-3.5 text-slate-400 group-hover:text-amber-300" />
+                  </a>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
 
-          <div className="hidden xs:flex items-center gap-2 px-3 py-1 rounded-full bg-fintech-card/80 border border-amber-400/30 text-xs text-amber-200 shadow-sm shadow-amber-400/10">
+          {/* OpenSea */}
+          <button
+            onClick={handleOpenSeaClick}
+            className="p-2 sm:px-3 rounded-xl bg-fintech-card border border-fintech-border text-slate-200 hover:text-blue-400 hover:border-blue-400/40 transition-colors flex items-center gap-1.5"
+            title="OpenSea Collection (Coming Soon)"
+          >
+            <svg className="w-4 h-4 fill-[#2081E2]" viewBox="0 0 24 24">
+              <path d="M12 0C5.37 0 0 5.37 0 12s5.37 12 12 12 12-5.37 12-12S18.63 0 12 0zm5.95 12.82l-3.32 4.41c-.42.56-1.12.89-1.83.89H8.46c-.66 0-1.28-.27-1.74-.75l-2.07-2.17a2.38 2.38 0 0 1-.65-1.63V8.89c0-.66.27-1.29.75-1.75l2.17-2.07c.46-.44 1.09-.67 1.74-.67h4.08c.66 0 1.28.27 1.74.75l2.07 2.17c.44.46.67 1.09.67 1.74v4.68c0 .38-.1.74-.27 1.08z" />
+            </svg>
+            <span className="text-xs font-pixel hidden sm:inline">OpenSea</span>
+          </button>
+
+          <div className="hidden md:flex items-center gap-2 px-3 py-1 rounded-full bg-fintech-card/80 border border-amber-400/30 text-xs text-amber-200 shadow-sm shadow-amber-400/10">
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-400"></span>
@@ -100,7 +138,7 @@ export function Navbar({ onOpenQuests }: { onOpenQuests: () => void }) {
           {/* Join Whitelist CTA - Golden Gradient */}
           <button
             onClick={onOpenQuests}
-            className="px-4 py-2 rounded-xl text-xs font-extrabold tracking-wider text-obsidian bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-500 hover:from-yellow-300 hover:to-amber-400 transition-all duration-300 shadow-md shadow-amber-500/25 hover:shadow-amber-400/40 hover:scale-[1.02] flex items-center gap-1.5 font-pixel"
+            className="px-3.5 py-2 rounded-xl text-xs font-extrabold tracking-wider text-obsidian bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-500 hover:from-yellow-300 hover:to-amber-400 transition-all duration-300 shadow-md shadow-amber-500/25 hover:shadow-amber-400/40 hover:scale-[1.02] flex items-center gap-1.5 font-pixel"
           >
             <ShieldCheck className="w-4 h-4 stroke-[2.5]" />
             <span>JOIN WHITELIST</span>

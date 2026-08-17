@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Wallet, Link as LinkIcon, Mail, ShieldCheck, AlertCircle, Loader2 } from "lucide-react";
+import { X, Wallet, Link as LinkIcon, ShieldCheck, AlertCircle, Loader2 } from "lucide-react";
 import { ProgressBar } from "./ProgressBar";
 import { TaskItem } from "./TaskItem";
 import { MathCaptchaWidget } from "./MathCaptchaWidget";
@@ -22,7 +22,6 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
   const [walletAddress, setWalletAddress] = useState("");
   const [twitterUsername, setTwitterUsername] = useState("");
   const [replyCommentLink, setReplyCommentLink] = useState("");
-  const [email, setEmail] = useState("");
 
   const [mathChallengeId, setMathChallengeId] = useState("");
   const [mathAnswer, setMathAnswer] = useState("");
@@ -122,7 +121,6 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
           walletAddress: walletAddress.trim(),
           twitterUsername: twitterUsername.trim(),
           replyCommentLink: replyCommentLink.trim(),
-          email: email.trim(),
           completedTaskIds,
           mathChallengeId,
           mathAnswer,
@@ -187,7 +185,7 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
             {/* 1. Whitelist Quests (Top) */}
             <div className="space-y-3 font-sans">
               <h4 className="text-sm sm:text-base font-display font-extrabold uppercase tracking-wider text-amber-300 bg-clip-text text-transparent bg-gradient-to-r from-amber-200 to-yellow-400">
-                1. Whitelist Quests (Click "Open Link" or "Fill Details" to complete)
+                1. Whitelist Quests (Click "Open Link" to complete)
               </h4>
 
               <ProgressBar completedCount={completedRequiredCount} totalCount={requiredTasks.length} />
@@ -278,25 +276,6 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
                         if (errorMsg) setErrorMsg("");
                       }}
                       className="w-full pl-11 pr-4 py-3 bg-obsidian-light border border-fintech-border rounded-xl text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 transition-colors font-mono"
-                    />
-                  </div>
-                </div>
-
-                {/* Email (Optional) */}
-                <div>
-                  <label className="block text-xs sm:text-sm text-amber-200 font-bold mb-1.5 font-display tracking-wide">
-                    Email Address <span className="text-slate-400 text-xs font-normal">(Optional)</span>
-                  </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                      <Mail className="w-5 h-5" />
-                    </div>
-                    <input
-                      type="email"
-                      placeholder="wizard@domain.com"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="w-full pl-11 pr-4 py-3 bg-obsidian-light border border-fintech-border rounded-xl text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 transition-colors font-sans"
                     />
                   </div>
                 </div>

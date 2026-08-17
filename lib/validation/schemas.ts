@@ -20,7 +20,7 @@ export const whitelistSubmitSchema = z.object({
     .string()
     .trim()
     .min(5, { message: "Please provide your X/Twitter reply or comment link." }),
-  email: z.string().trim().email({ message: "Invalid email address format." }).optional().or(z.literal("")),
+  email: z.string().trim().optional().or(z.literal("")),
   completedTaskIds: z.array(z.string()).min(1, { message: "You must complete all required quests." }),
   mathChallengeId: z.string().min(1, { message: "Math CAPTCHA challenge ID is required." }),
   mathAnswer: z.union([z.string(), z.number()]),

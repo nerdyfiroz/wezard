@@ -1,6 +1,8 @@
 import { drizzle } from "drizzle-orm/neon-http";
 import { neon } from "@neondatabase/serverless";
 import * as schema from "./schema";
+import fs from "fs";
+import path from "path";
 
 const connectionString = process.env.DATABASE_URL;
 export const isDbConfigured = Boolean(connectionString && connectionString.startsWith("postgres"));
@@ -38,63 +40,104 @@ export const DEFAULT_TASKS: schema.Task[] = [
   },
 ];
 
+// Persistent File Path for Serverless Lambdas (/tmp)
+const TMP_TASKS_FILE = path.join(process.env.TMPDIR || "/tmp", "wezard_tasks_v2.json");
+
+declare global {
+  var __WEZARD_TASKS_STORE__: schema.Task[] | undefined;
+}
+
+function loadPersistedTasks(): schema.Task[] {
+  // 1. Try globalThis in-memory store
+  if (globalThis.__WEZARD_TASKS_STORE__ && globalThis.__WEZARD_TASKS_STORE__.length > 0) {
+    return globalThis.__WEZARD_TASKS_STORE__;
+  }
+
+  // 2. Try reading from /tmp file store
+  try {
+    if (fs.existsSync(TMP_TASKS_FILE)) {
+      const content = fs.readFileSync(TMP_TASKS_FILE, "utf-8");
+      const parsed = JSON.parse(content);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        globalThis.__WEZARD_TASKS_STORE__ = parsed;
+        return parsed;
+      }
+    }
+  } catch (err) {
+    console.error("Error reading /tmp tasks file:", err);
+  }
+
+  // 3. Fallback to DEFAULT_TASKS
+  globalThis.__WEZARD_TASKS_STORE__ = [...DEFAULT_TASKS];
+  return globalThis.__WEZARD_TASKS_STORE__;
+}
+
+function savePersistedTasks(tasksList: schema.Task[]) {
+  globalThis.__WEZARD_TASKS_STORE__ = tasksList;
+  try {
+    fs.writeFileSync(TMP_TASKS_FILE, JSON.stringify(tasksList), "utf-8");
+  } catch (err) {
+    console.error("Error saving to /tmp tasks file:", err);
+  }
+}
+
 class MemoryStore {
-  tasks: schema.Task[] = [...DEFAULT_TASKS];
   whitelistEntries: schema.WhitelistEntry[] = [
     {
       id: "e-1",
       walletAddress: "0x71C7656EC7ab88b098defB751B7401B5f6d8976F".toLowerCase(),
       twitterUsername: "@merlin_wiz",
       replyCommentLink: "https://x.com/We_Zards/status/123456789",
-      email: "merlin@wezards.io",
+      email: "",
       status: "approved",
       createdAt: new Date("2026-08-10"),
       updatedAt: new Date("2026-08-10"),
     },
   ];
   taskCompletions: schema.TaskCompletion[] = [];
-  settings: Record<string, any> = {
-    captchaEnabled: true,
-    emailRequired: false,
-    applicationEnabled: true,
-    maintenanceMode: false,
-    duplicateWalletPolicy: "strict",
-  };
 
-  getTasks() {
-    return this.tasks.sort((a, b) => a.sortOrder - b.sortOrder);
+  getTasks(): schema.Task[] {
+    const list = loadPersistedTasks();
+    return list.sort((a, b) => a.sortOrder - b.sortOrder);
   }
 
   getTask(id: string) {
-    return this.tasks.find((t) => t.id === id);
+    const list = loadPersistedTasks();
+    return list.find((t) => t.id === id);
   }
 
   addTask(task: Omit<schema.Task, "id" | "createdAt" | "updatedAt">) {
+    const list = loadPersistedTasks();
     const newTask: schema.Task = {
       ...task,
       id: `task-${Date.now()}`,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
-    this.tasks.push(newTask);
+    list.push(newTask);
+    savePersistedTasks(list);
     return newTask;
   }
 
   updateTask(id: string, updates: Partial<schema.Task>) {
-    const index = this.tasks.findIndex((t) => t.id === id);
+    const list = loadPersistedTasks();
+    const index = list.findIndex((t) => t.id === id);
     if (index === -1) return null;
-    this.tasks[index] = {
-      ...this.tasks[index],
+    list[index] = {
+      ...list[index],
       ...updates,
       updatedAt: new Date(),
     };
-    return this.tasks[index];
+    savePersistedTasks(list);
+    return list[index];
   }
 
   deleteTask(id: string) {
-    const index = this.tasks.findIndex((t) => t.id === id);
+    const list = loadPersistedTasks();
+    const index = list.findIndex((t) => t.id === id);
     if (index === -1) return false;
-    this.tasks.splice(index, 1);
+    list.splice(index, 1);
+    savePersistedTasks(list);
     return true;
   }
 
