@@ -13,47 +13,17 @@ export async function GET(req: NextRequest) {
 
   try {
     if (isDbConfigured && db) {
-      let allTasks = await db.select().from(tasks).orderBy(asc(tasks.sortOrder));
-
-      // Auto-seed default tasks if DB tasks table is empty
-      if (allTasks.length === 0) {
-        try {
-          await db.insert(tasks).values(
-            DEFAULT_TASKS.map((t) => ({
-              title: t.title,
-              description: t.description,
-              type: t.type,
-              url: t.url,
-              required: t.required,
-              active: t.active,
-              sortOrder: t.sortOrder,
-            }))
-          );
-          allTasks = await db.select().from(tasks).orderBy(asc(tasks.sortOrder));
-        } catch (seedErr) {
-          console.error("Auto-seed error:", seedErr);
+      try {
+        let allTasks = await db.select().from(tasks).orderBy(asc(tasks.sortOrder));
+        if (allTasks.length > 0) {
+          return NextResponse.json({ tasks: allTasks });
         }
+      } catch (dbErr) {
+        console.error("DB get admin tasks failed, fallback to memory store:", dbErr);
       }
-
-      return NextResponse.json({ tasks: allTasks });
-    } else {
-      const customCookie = req.cookies.get("wezard_custom_tasks")?.value;
-      let allTasks = memoryStore.getTasks();
-
-      if (customCookie) {
-        try {
-          const parsed = JSON.parse(customCookie);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            allTasks = parsed;
-            memoryStore.tasks = parsed;
-          }
-        } catch (err) {
-          console.error("Error parsing custom tasks cookie:", err);
-        }
-      }
-
-      return NextResponse.json({ tasks: allTasks });
     }
+
+    return NextResponse.json({ tasks: memoryStore.getTasks() });
   } catch (error) {
     console.error("Failed to fetch admin tasks:", error);
     return NextResponse.json({ tasks: DEFAULT_TASKS });
@@ -76,57 +46,44 @@ export async function POST(req: NextRequest) {
 
     const taskData = validation.data;
 
+    // Always add to memoryStore + /tmp store
+    const newTaskInMemory = memoryStore.addTask({
+      title: taskData.title,
+      description: taskData.description,
+      type: taskData.type,
+      url: taskData.url || "",
+      required: taskData.required,
+      verificationType: taskData.verificationType,
+      active: taskData.active,
+      sortOrder: taskData.sortOrder,
+    });
+
     if (isDbConfigured && db) {
-      const [newTask] = await db
-        .insert(tasks)
-        .values({
-          title: taskData.title,
-          description: taskData.description,
-          type: taskData.type,
-          url: taskData.url || "",
-          required: taskData.required,
-          verificationType: taskData.verificationType,
-          active: taskData.active,
-          sortOrder: taskData.sortOrder,
-        })
-        .returning();
+      try {
+        const [newTaskDb] = await db
+          .insert(tasks)
+          .values({
+            id: newTaskInMemory.id,
+            title: taskData.title,
+            description: taskData.description,
+            type: taskData.type,
+            url: taskData.url || "",
+            required: taskData.required,
+            verificationType: taskData.verificationType,
+            active: taskData.active,
+            sortOrder: taskData.sortOrder,
+          })
+          .returning();
 
-      return NextResponse.json({ success: true, task: newTask });
-    } else {
-      // Check existing custom tasks cookie
-      const customCookie = req.cookies.get("wezard_custom_tasks")?.value;
-      if (customCookie) {
-        try {
-          const parsed = JSON.parse(customCookie);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            memoryStore.tasks = parsed;
-          }
-        } catch (e) {}
+        if (newTaskDb) {
+          return NextResponse.json({ success: true, task: newTaskDb, tasks: memoryStore.getTasks() });
+        }
+      } catch (dbErr) {
+        console.error("DB insert task failed, fallback to memory store:", dbErr);
       }
-
-      const newTask = memoryStore.addTask({
-        title: taskData.title,
-        description: taskData.description,
-        type: taskData.type,
-        url: taskData.url || "",
-        required: taskData.required,
-        verificationType: taskData.verificationType,
-        active: taskData.active,
-        sortOrder: taskData.sortOrder,
-      });
-
-      const updatedTasksList = memoryStore.getTasks();
-      const response = NextResponse.json({ success: true, task: newTask, tasks: updatedTasksList });
-
-      // Set cookie so tasks persist across serverless instances
-      response.cookies.set("wezard_custom_tasks", JSON.stringify(updatedTasksList), {
-        path: "/",
-        maxAge: 31536000,
-        sameSite: "lax",
-      });
-
-      return response;
     }
+
+    return NextResponse.json({ success: true, task: newTaskInMemory, tasks: memoryStore.getTasks() });
   } catch (error) {
     console.error("Failed to create task:", error);
     return NextResponse.json({ error: "Failed to create task" }, { status: 500 });

@@ -31,11 +31,18 @@ export async function POST(req: NextRequest) {
     // 3. Server-Side Verification: Ensure 100% of REQUIRED tasks are completed
     let requiredTaskIds: string[] = [];
     if (isDbConfigured && db) {
-      const dbRequiredTasks = await db
-        .select({ id: tasks.id })
-        .from(tasks)
-        .where(and(eq(tasks.active, true), eq(tasks.required, true)));
-      requiredTaskIds = dbRequiredTasks.map((t) => t.id);
+      try {
+        const dbRequiredTasks = await db
+          .select({ id: tasks.id })
+          .from(tasks)
+          .where(and(eq(tasks.active, true), eq(tasks.required, true)));
+        requiredTaskIds = dbRequiredTasks.map((t) => t.id);
+      } catch (dbErr) {
+        requiredTaskIds = memoryStore
+          .getTasks()
+          .filter((t) => t.active && t.required)
+          .map((t) => t.id);
+      }
     } else {
       requiredTaskIds = memoryStore
         .getTasks()
@@ -53,90 +60,101 @@ export async function POST(req: NextRequest) {
 
     // 4. Check duplicate wallet & Twitter username
     if (isDbConfigured && db) {
-      const existing = await db
-        .select()
-        .from(whitelistEntries)
-        .where(
-          or(
-            eq(whitelistEntries.walletAddress, normalizedWallet),
-            eq(whitelistEntries.twitterUsername, normalizedTwitter)
-          )
-        );
-
-      if (existing.length > 0) {
-        const match = existing[0];
-        if (match.walletAddress === normalizedWallet) {
-          return NextResponse.json(
-            { error: "That wallet address has already joined the WeZards whitelist." },
-            { status: 400 }
+      try {
+        const existing = await db
+          .select()
+          .from(whitelistEntries)
+          .where(
+            or(
+              eq(whitelistEntries.walletAddress, normalizedWallet),
+              eq(whitelistEntries.twitterUsername, normalizedTwitter)
+            )
           );
+
+        if (existing.length > 0) {
+          const match = existing[0];
+          if (match.walletAddress === normalizedWallet) {
+            return NextResponse.json(
+              { error: "That wallet address has already joined the WeZards whitelist." },
+              { status: 400 }
+            );
+          }
+          if (match.twitterUsername === normalizedTwitter) {
+            return NextResponse.json(
+              { error: "That X/Twitter username has already been registered." },
+              { status: 400 }
+            );
+          }
         }
-        if (match.twitterUsername === normalizedTwitter) {
-          return NextResponse.json(
-            { error: "That X/Twitter username has already been registered." },
-            { status: 400 }
-          );
+
+        const entryId = `w-${Date.now()}`;
+        // Insert into PostgreSQL
+        const [newEntry] = await db
+          .insert(whitelistEntries)
+          .values({
+            id: entryId,
+            walletAddress: normalizedWallet,
+            twitterUsername: normalizedTwitter,
+            replyCommentLink,
+            email: email || "",
+            status: "pending",
+          })
+          .returning();
+
+        // Insert task completions
+        if (completedTaskIds.length > 0) {
+          try {
+            await db.insert(taskCompletions).values(
+              completedTaskIds.map((taskId) => ({
+                id: `tc-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+                whitelistEntryId: newEntry.id,
+                taskId,
+                status: "completed",
+              }))
+            );
+          } catch (tcErr) {
+            console.error("Task completions insert notice:", tcErr);
+          }
         }
+
+        return NextResponse.json({
+          success: true,
+          message: "WELCOME TO THE CIRCLE",
+          entryId: newEntry.id,
+        });
+      } catch (dbErr) {
+        console.error("DB submission failed, fallback to memoryStore:", dbErr);
       }
-
-      // Insert into PostgreSQL
-      const [newEntry] = await db
-        .insert(whitelistEntries)
-        .values({
-          walletAddress: normalizedWallet,
-          twitterUsername: normalizedTwitter,
-          replyCommentLink,
-          email: email || "",
-          status: "pending",
-        })
-        .returning();
-
-      // Insert task completions
-      if (completedTaskIds.length > 0) {
-        await db.insert(taskCompletions).values(
-          completedTaskIds.map((taskId) => ({
-            whitelistEntryId: newEntry.id,
-            taskId,
-            status: "completed",
-          }))
-        );
-      }
-
-      return NextResponse.json({
-        success: true,
-        message: "WELCOME TO THE CIRCLE",
-        entryId: newEntry.id,
-      });
-    } else {
-      // Memory Store logic
-      if (memoryStore.findEntryByWallet(normalizedWallet)) {
-        return NextResponse.json(
-          { error: "That wallet address has already joined the WeZards whitelist." },
-          { status: 400 }
-        );
-      }
-
-      if (memoryStore.findEntryByTwitter(normalizedTwitter)) {
-        return NextResponse.json(
-          { error: "That X/Twitter username has already been registered." },
-          { status: 400 }
-        );
-      }
-
-      const newEntry = memoryStore.addEntry({
-        walletAddress: normalizedWallet,
-        twitterUsername: normalizedTwitter,
-        replyCommentLink,
-        email,
-        completedTaskIds,
-      });
-
-      return NextResponse.json({
-        success: true,
-        message: "WELCOME TO THE CIRCLE",
-        entryId: newEntry.id,
-      });
     }
+
+    // Memory Store logic
+    if (memoryStore.findEntryByWallet(normalizedWallet)) {
+      return NextResponse.json(
+        { error: "That wallet address has already joined the WeZards whitelist." },
+        { status: 400 }
+      );
+    }
+
+    if (memoryStore.findEntryByTwitter(normalizedTwitter)) {
+      return NextResponse.json(
+        { error: "That X/Twitter username has already been registered." },
+        { status: 400 }
+      );
+    }
+
+    const newEntry = memoryStore.addEntry({
+      walletAddress: normalizedWallet,
+      twitterUsername: normalizedTwitter,
+      replyCommentLink,
+      email,
+      completedTaskIds,
+    });
+
+    return NextResponse.json({
+      success: true,
+      message: "WELCOME TO THE CIRCLE",
+      entryId: newEntry.id,
+    });
   } catch (error) {
     console.error("Submission error:", error);
     return NextResponse.json({ error: "Something went wrong. Please try again." }, { status: 500 });
