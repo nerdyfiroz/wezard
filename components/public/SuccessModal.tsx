@@ -36,17 +36,14 @@ export function SuccessModal({ isOpen, onClose, walletAddress }: SuccessModalPro
             <X className="w-4 h-4" />
           </button>
 
-          {/* Icon Header */}
-          <div className="relative mx-auto w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-300 via-yellow-500 to-amber-600 p-0.5 shadow-xl shadow-amber-500/30 mb-6 flex items-center justify-center">
-            <div className="w-full h-full bg-[#181a22] rounded-[14px] flex items-center justify-center p-1.5 overflow-hidden">
-              <Image
-                src="/Wizeffgmbers.png"
-                alt="WeZards Logo"
-                width={48}
-                height={48}
-                className="w-full h-full object-contain"
-              />
-            </div>
+          {/* Icon Header — image fills border fully */}
+          <div className="relative mx-auto w-20 h-20 rounded-2xl border-2 border-amber-400/70 shadow-xl shadow-amber-500/30 mb-6 overflow-hidden">
+            <Image
+              src="/Wizeffgmbers.png"
+              alt="WeZards Logo"
+              fill
+              className="object-cover"
+            />
           </div>
 
           {/* Main Title */}

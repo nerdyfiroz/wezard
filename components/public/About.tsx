@@ -37,12 +37,12 @@ const STATS = [
 const TRAITS = [
   {
     icon: "🧙",
-    title: "Wizard World",
+    title: "Wezard World",
     desc: "A pixelated realm of wizards, witches & mystical energy — every corner alive with arcane wonder.",
   },
   {
     icon: "🪶",
-    title: "On Robinhood Chain",
+    title: "Robinhood Chain",
     desc: "Exclusively minting on @robinhoodcrypto — bringing magic to one of the world's most trusted platforms.",
   },
 ];
