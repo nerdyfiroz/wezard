@@ -25,7 +25,6 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
 
   const [mathChallengeId, setMathChallengeId] = useState("");
   const [mathAnswer, setMathAnswer] = useState("");
-  const [captchaRefreshTrigger, setCaptchaRefreshTrigger] = useState(0);
 
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
@@ -134,7 +133,6 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
       if (!res.ok) {
         setErrorMsg(data.error || "Submission failed. Please check your inputs.");
         setLoading(false);
-        setCaptchaRefreshTrigger((prev) => prev + 1);
         return;
       }
 
@@ -143,7 +141,6 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
     } catch (err) {
       setLoading(false);
       setErrorMsg("Something went wrong. Please try again.");
-      setCaptchaRefreshTrigger((prev) => prev + 1);
     }
   };
 
@@ -295,9 +292,8 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
               </div>
             </div>
 
-            {/* 2-Number Math CAPTCHA Widget */}
+            {/* 2-Number Math CAPTCHA Widget (Stateless HMAC - Never Expires Mid-Session) */}
             <MathCaptchaWidget
-              refreshTrigger={captchaRefreshTrigger}
               onChallengeReady={(challengeId, answer) => {
                 setMathChallengeId(challengeId);
                 setMathAnswer(answer);
