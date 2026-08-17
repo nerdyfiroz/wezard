@@ -3,6 +3,9 @@ import { getAdminSessionFromCookies } from "@/lib/auth/session";
 import { taskSchema } from "@/lib/validation/schemas";
 import { updateUnifiedTask, deleteUnifiedTask } from "@/lib/db";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   const session = await getAdminSessionFromCookies();
   if (!session) {

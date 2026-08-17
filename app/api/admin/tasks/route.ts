@@ -3,6 +3,9 @@ import { getAdminSessionFromCookies } from "@/lib/auth/session";
 import { taskSchema } from "@/lib/validation/schemas";
 import { DEFAULT_TASKS, getUnifiedTasks, addUnifiedTask } from "@/lib/db";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export async function GET(req: NextRequest) {
   const session = await getAdminSessionFromCookies();
   if (!session) {
@@ -11,7 +14,14 @@ export async function GET(req: NextRequest) {
 
   try {
     const tasks = await getUnifiedTasks();
-    return NextResponse.json({ tasks });
+    return NextResponse.json(
+      { tasks },
+      {
+        headers: {
+          "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+        },
+      }
+    );
   } catch (error) {
     console.error("Failed to fetch admin tasks:", error);
     return NextResponse.json({ tasks: DEFAULT_TASKS });
