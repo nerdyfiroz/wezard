@@ -8,12 +8,10 @@ type MathChallenge = {
 const challengeMap = new Map<string, MathChallenge>();
 
 /**
- * Generates a diverse addition or multiplication math problem.
+ * Generates a Math CAPTCHA problem using STRICTLY 2 NUMBERS (addition or multiplication).
  * Examples:
  * - "14 + 19 = ?"
  * - "7 × 8 = ?"
- * - "6 + 9 + 8 = ?"
- * - "5 × 4 + 7 = ?"
  * - "What is 12 plus 15?"
  * - "What is 8 multiplied by 6?"
  * - "16 + ? = 29"
@@ -21,14 +19,14 @@ const challengeMap = new Map<string, MathChallenge>();
  */
 export function generateMathCaptcha(): { challengeId: string; question: string } {
   const id = `math-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
-  const mathType = Math.floor(Math.random() * 7);
+  const mathType = Math.floor(Math.random() * 6);
 
   let question = "";
   let expectedAnswer = 0;
 
   switch (mathType) {
     case 0: {
-      // Two-number Addition: 14 + 19 = ?
+      // 2-number Addition: 14 + 19 = ?
       const n1 = Math.floor(Math.random() * 35) + 5;
       const n2 = Math.floor(Math.random() * 35) + 5;
       question = `${n1} + ${n2} = ?`;
@@ -36,7 +34,7 @@ export function generateMathCaptcha(): { challengeId: string; question: string }
       break;
     }
     case 1: {
-      // Two-number Multiplication: 7 × 8 = ?
+      // 2-number Multiplication: 7 × 8 = ?
       const n1 = Math.floor(Math.random() * 9) + 2;
       const n2 = Math.floor(Math.random() * 9) + 2;
       question = `${n1} × ${n2} = ?`;
@@ -44,40 +42,22 @@ export function generateMathCaptcha(): { challengeId: string; question: string }
       break;
     }
     case 2: {
-      // Three-number Addition: 6 + 9 + 8 = ?
-      const n1 = Math.floor(Math.random() * 15) + 2;
-      const n2 = Math.floor(Math.random() * 15) + 2;
-      const n3 = Math.floor(Math.random() * 15) + 2;
-      question = `${n1} + ${n2} + ${n3} = ?`;
-      expectedAnswer = n1 + n2 + n3;
-      break;
-    }
-    case 3: {
-      // Mixed Multiplication & Addition: 5 × 4 + 7 = ?
-      const n1 = Math.floor(Math.random() * 7) + 2;
-      const n2 = Math.floor(Math.random() * 7) + 2;
-      const n3 = Math.floor(Math.random() * 15) + 2;
-      question = `${n1} × ${n2} + ${n3} = ?`;
-      expectedAnswer = n1 * n2 + n3;
-      break;
-    }
-    case 4: {
-      // Worded Addition: What is 12 plus 15?
+      // Worded 2-number Addition: What is 12 plus 15?
       const n1 = Math.floor(Math.random() * 25) + 5;
       const n2 = Math.floor(Math.random() * 25) + 5;
       question = `What is ${n1} plus ${n2}?`;
       expectedAnswer = n1 + n2;
       break;
     }
-    case 5: {
-      // Worded Multiplication: What is 8 multiplied by 6?
+    case 3: {
+      // Worded 2-number Multiplication: What is 8 multiplied by 6?
       const n1 = Math.floor(Math.random() * 8) + 2;
       const n2 = Math.floor(Math.random() * 8) + 2;
       question = `What is ${n1} multiplied by ${n2}?`;
       expectedAnswer = n1 * n2;
       break;
     }
-    case 6: {
+    case 4: {
       // Fill-in-the-blank Addition: 16 + ? = 29
       const n1 = Math.floor(Math.random() * 20) + 5;
       const missing = Math.floor(Math.random() * 20) + 5;
@@ -86,11 +66,20 @@ export function generateMathCaptcha(): { challengeId: string; question: string }
       expectedAnswer = missing;
       break;
     }
+    case 5: {
+      // Fill-in-the-blank Multiplication: ? × 7 = 42
+      const n2 = Math.floor(Math.random() * 8) + 2;
+      const missing = Math.floor(Math.random() * 8) + 2;
+      const total = missing * n2;
+      question = `? × ${n2} = ${total}`;
+      expectedAnswer = missing;
+      break;
+    }
     default: {
-      const n1 = 7;
-      const n2 = 6;
+      const n1 = 8;
+      const n2 = 7;
       question = `${n1} × ${n2} = ?`;
-      expectedAnswer = 42;
+      expectedAnswer = 56;
     }
   }
 
