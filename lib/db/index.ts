@@ -21,8 +21,38 @@ async function ensureMigrated() {
     // Add proof columns if they don't exist (idempotent)
     await db.execute(sql`ALTER TABLE tasks ADD COLUMN IF NOT EXISTS proof_label VARCHAR(255)`);
     await db.execute(sql`ALTER TABLE tasks ADD COLUMN IF NOT EXISTS proof_required BOOLEAN NOT NULL DEFAULT false`);
-  } catch {
-    // Ignore errors (columns may already exist or table may not exist yet)
+
+    // Backfill proof labels for existing default tasks if they were null
+    await db.execute(sql`
+      UPDATE tasks 
+      SET proof_label = 'Submit your X / Twitter handle or profile link' 
+      WHERE id = '7d9e4a1b-3c2f-4e8a-9b1d-5f6e7a8b9c0d' AND (proof_label IS NULL OR proof_label = '');
+    `);
+    await db.execute(sql`
+      UPDATE tasks 
+      SET proof_label = 'Paste your reply or comment tweet link', proof_required = true
+      WHERE id = 'a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d' AND (proof_label IS NULL OR proof_label = '');
+    `);
+
+    // Insert 3rd default task if only 2 exist
+    const existingCount = await db.select().from(schema.tasks);
+    if (existingCount.length === 2) {
+      await db.insert(schema.tasks).values({
+        id: "c3d4e5f6-7a8b-9c0d-1e2f-3a4b5c6d7e8f",
+        title: "Join Community & Share the WeZards Quest",
+        description: "Spread the magic, tag your wizard crew or quote the official announcement.",
+        type: "x_repost",
+        url: "https://x.com/We_Zards",
+        required: true,
+        verificationType: "url",
+        active: true,
+        sortOrder: 3,
+        proofLabel: "Submit your quote tweet / proof link",
+        proofRequired: true,
+      });
+    }
+  } catch (err) {
+    console.error("Auto-migration notice:", err);
   }
 }
 
@@ -38,8 +68,8 @@ export const DEFAULT_TASKS: schema.Task[] = [
     verificationType: "url",
     active: true,
     sortOrder: 1,
-    proofLabel: null,
-    proofRequired: false,
+    proofLabel: "Submit your X / Twitter handle or profile link",
+    proofRequired: true,
     createdAt: new Date("2026-08-01"),
     updatedAt: new Date("2026-08-01"),
   },
@@ -53,7 +83,22 @@ export const DEFAULT_TASKS: schema.Task[] = [
     verificationType: "url",
     active: true,
     sortOrder: 2,
-    proofLabel: "Paste your reply/comment tweet link",
+    proofLabel: "Paste your reply or comment tweet link",
+    proofRequired: true,
+    createdAt: new Date("2026-08-01"),
+    updatedAt: new Date("2026-08-01"),
+  },
+  {
+    id: "c3d4e5f6-7a8b-9c0d-1e2f-3a4b5c6d7e8f",
+    title: "Join Community & Share the WeZards Quest",
+    description: "Spread the magic, tag your wizard crew or quote the official announcement.",
+    type: "x_repost",
+    url: "https://x.com/We_Zards",
+    required: true,
+    verificationType: "url",
+    active: true,
+    sortOrder: 3,
+    proofLabel: "Submit your quote tweet / proof link",
     proofRequired: true,
     createdAt: new Date("2026-08-01"),
     updatedAt: new Date("2026-08-01"),

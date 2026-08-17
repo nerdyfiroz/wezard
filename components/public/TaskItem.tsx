@@ -16,7 +16,11 @@ interface TaskItemProps {
 export function TaskItem({ task, isCompleted, proofValue, onVisitTask, onProofChange }: TaskItemProps) {
   const isCombinedFollow = task.title.includes("@We_Zards") && task.title.includes("@SickickZards");
 
-  const hasProofBox = Boolean(task.proofLabel && task.proofLabel.trim().length > 0);
+  // Always show proof box for each task unless explicitly set to "__disabled__"
+  const hasProofBox = task.proofLabel !== "__disabled__";
+  const proofLabelText = task.proofLabel && task.proofLabel.trim().length > 0
+    ? task.proofLabel
+    : "Submit Task Proof Link / Verification URL";
   const isProofFilled = !hasProofBox || !task.proofRequired || proofValue.trim().length > 3;
 
   // Task is "visited" when they clicked the link OR filled proof
@@ -121,7 +125,7 @@ export function TaskItem({ task, isCompleted, proofValue, onVisitTask, onProofCh
         </div>
       </div>
 
-      {/* ── Proof Box (appears under the task if proofLabel is set) ── */}
+      {/* ── Proof Box (underneath each task) ── */}
       {hasProofBox && (
         <div className="px-4 pb-4 sm:px-5 sm:pb-5">
           <div className={`rounded-xl border p-3 transition-all ${
@@ -129,11 +133,11 @@ export function TaskItem({ task, isCompleted, proofValue, onVisitTask, onProofCh
               ? "border-cyan-400/40 bg-cyan-500/5"
               : "border-fintech-border/60 bg-obsidian-light/40"
           }`}>
-            <label className="flex items-center gap-1.5 text-[11px] font-mono font-semibold mb-2 text-slate-400">
-              <Link2 className="w-3 h-3" />
-              {task.proofLabel}
+            <label className="flex items-center gap-1.5 text-[11px] font-mono font-semibold mb-2 text-slate-300">
+              <Link2 className="w-3.5 h-3.5 text-cyan-400" />
+              <span>{proofLabelText}</span>
               {task.proofRequired && (
-                <span className="ml-1 px-1.5 py-0.5 rounded text-[9px] bg-cyan-400/10 text-cyan-400 border border-cyan-400/30">
+                <span className="ml-1 px-1.5 py-0.5 rounded text-[9px] bg-cyan-400/10 text-cyan-400 border border-cyan-400/30 font-bold">
                   REQUIRED
                 </span>
               )}
@@ -143,8 +147,8 @@ export function TaskItem({ task, isCompleted, proofValue, onVisitTask, onProofCh
               value={proofValue}
               onChange={(e) => onProofChange(task.id, e.target.value)}
               onClick={(e) => e.stopPropagation()}
-              placeholder="https://x.com/..."
-              className="w-full px-3 py-2 bg-obsidian border border-fintech-border/60 rounded-lg text-xs text-white placeholder-slate-600 focus:outline-none focus:border-cyan-400/50 focus:ring-1 focus:ring-cyan-400/20 transition-all font-mono"
+              placeholder="https://x.com/... (paste link or proof)"
+              className="w-full px-3 py-2.5 bg-obsidian border border-fintech-border/60 rounded-lg text-xs text-white placeholder-slate-600 focus:outline-none focus:border-cyan-400/50 focus:ring-1 focus:ring-cyan-400/20 transition-all font-mono"
             />
             {task.proofRequired && isCompleted && proofValue.trim().length <= 3 && (
               <p className="mt-1.5 text-[10px] text-amber-400/80 flex items-center gap-1">
