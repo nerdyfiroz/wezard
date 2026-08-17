@@ -8,9 +8,13 @@ interface MathCaptchaWidgetProps {
   refreshTrigger?: number;
 }
 
-const standardFontFamily = "Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif";
+const standardFontFamily =
+  "Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif";
 
-export function MathCaptchaWidget({ onChallengeReady, refreshTrigger }: MathCaptchaWidgetProps) {
+export function MathCaptchaWidget({
+  onChallengeReady,
+  refreshTrigger,
+}: MathCaptchaWidgetProps) {
   const [challengeId, setChallengeId] = useState("");
   const [question, setQuestion] = useState("");
   const [userAnswer, setUserAnswer] = useState("");
@@ -28,7 +32,7 @@ export function MathCaptchaWidget({ onChallengeReady, refreshTrigger }: MathCapt
         onChallengeReady(data.challengeId, "");
       }
     } catch (err) {
-      console.error("Failed to load Math CAPTCHA:", err);
+      console.error("Failed to load math captcha challenge:", err);
     } finally {
       setLoading(false);
     }
@@ -40,20 +44,20 @@ export function MathCaptchaWidget({ onChallengeReady, refreshTrigger }: MathCapt
 
   const handleAnswerChange = (val: string) => {
     setUserAnswer(val);
-    onChallengeReady(challengeId, val);
+    onChallengeReady(challengeId, val.trim());
   };
 
   return (
     <div
+      className="p-3 rounded-xl bg-[#282b35]/70 border border-slate-700/70 space-y-2 font-sans shadow-md"
       style={{ fontFamily: standardFontFamily }}
-      className="p-4 sm:p-5 rounded-2xl bg-obsidian-light/90 border border-fintech-border space-y-3 font-standard"
     >
       <div className="flex items-center justify-between">
         <label
           style={{ fontFamily: standardFontFamily }}
-          className="text-sm font-bold text-slate-200 flex items-center gap-2 tracking-wide"
+          className="text-xs font-semibold text-slate-300 flex items-center gap-1.5"
         >
-          <Calculator className="w-5 h-5 text-amber-400" />
+          <Calculator className="w-3.5 h-3.5 text-amber-400" />
           <span>Security Verification (Math CAPTCHA)</span>
         </label>
         <button
@@ -61,32 +65,32 @@ export function MathCaptchaWidget({ onChallengeReady, refreshTrigger }: MathCapt
           onClick={fetchChallenge}
           disabled={loading}
           style={{ fontFamily: standardFontFamily }}
-          className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-fintech-card transition-colors flex items-center gap-1 text-xs font-semibold"
+          className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700/50 transition-colors flex items-center gap-1 text-[11px] font-semibold"
           title="Get New Question"
         >
-          <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
-          <span className="hidden sm:inline">Refresh</span>
+          <RefreshCw className={`w-3 h-3 ${loading ? "animate-spin" : ""}`} />
+          <span>Refresh</span>
         </button>
       </div>
 
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-        {/* Math Question Display - GUARANTEED STANDARD NORMAL FONT */}
+      <div className="flex items-center gap-2.5">
+        {/* Math Question Display - Compact */}
         <div
           style={{ fontFamily: standardFontFamily }}
-          className="px-5 py-3 rounded-xl bg-obsidian border border-amber-400/40 text-amber-300 font-extrabold text-2xl tracking-wider flex items-center justify-center shrink-0 min-w-[150px] shadow-inner select-none"
+          className="h-10 px-3 rounded-lg bg-[#181a22] border border-amber-400/40 text-amber-300 font-bold text-base tracking-wider flex items-center justify-center shrink-0 min-w-[90px] select-none"
         >
           {loading ? "..." : question || "7 + 8 = ?"}
         </div>
 
-        {/* Math Answer Input - Off-White with Glow */}
+        {/* Math Answer Input - Compact Grey */}
         <input
           type="number"
           required
-          placeholder="Enter answer number"
+          placeholder="Answer"
           value={userAnswer}
           onChange={(e) => handleAnswerChange(e.target.value)}
           style={{ fontFamily: standardFontFamily }}
-          className="flex-1 px-4 py-3 bg-[#f4f4f6] text-[#111827] placeholder-slate-500 border border-amber-400/50 shadow-[0_0_12px_rgba(245,158,11,0.18)] rounded-xl text-base font-bold focus:outline-none focus:border-amber-400 focus:shadow-[0_0_18px_rgba(245,158,11,0.38)] transition-all tracking-wide"
+          className="h-10 flex-1 px-3 bg-[#181a22] text-white placeholder-slate-500 border border-slate-700/80 rounded-lg text-xs sm:text-sm font-semibold focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400/30 transition-all"
         />
       </div>
     </div>

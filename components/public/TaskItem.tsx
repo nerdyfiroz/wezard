@@ -220,7 +220,7 @@ export function TaskItem({
         </div>
       </div>
 
-      {/* ── Proof Box (underneath each task) with Off-White background & Glow ── */}
+      {/* ── Proof Box (underneath each task) with Grey background, Glow & identical size ── */}
       {hasProofBox && (
         <div className="px-4 pb-4 sm:px-5 sm:pb-5">
           <div className="relative">
@@ -229,7 +229,7 @@ export function TaskItem({
               value={proofValue}
               onChange={(e) => onProofChange(task.id, e.target.value)}
               placeholder={defaultPlaceholder}
-              className="w-full px-3.5 py-2.5 bg-[#f4f4f6] text-[#111827] placeholder-slate-500 rounded-lg text-xs font-mono font-semibold border border-amber-400/40 shadow-[0_0_12px_rgba(245,158,11,0.18)] focus:outline-none focus:border-amber-400 focus:shadow-[0_0_18px_rgba(245,158,11,0.38)] focus:ring-1 focus:ring-amber-400 transition-all"
+              className="h-12 w-full px-4 py-3 bg-[#282b35] text-white placeholder-slate-500 rounded-xl text-xs sm:text-sm font-mono font-medium border border-amber-400/50 shadow-[0_0_14px_rgba(245,158,11,0.2)] focus:outline-none focus:border-amber-400 focus:shadow-[0_0_22px_rgba(245,158,11,0.4)] focus:ring-1 focus:ring-amber-400 transition-all"
             />
             {task.proofRequired && isCompleted && proofValue.trim().length === 0 && (
               <p className="mt-1.5 text-[10px] text-amber-400/90 flex items-center gap-1">

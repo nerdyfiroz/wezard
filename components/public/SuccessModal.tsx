@@ -16,13 +16,13 @@ export function SuccessModal({ isOpen, onClose, walletAddress }: SuccessModalPro
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#161821]/80 backdrop-blur-xl">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
         <motion.div
           initial={{ opacity: 0, scale: 0.9, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 10 }}
           transition={{ duration: 0.4, type: "spring", stiffness: 300, damping: 25 }}
-          className="relative w-full max-w-md bg-[#21242d] border border-amber-400/40 rounded-2xl p-6 sm:p-8 text-center shadow-2xl shadow-amber-500/20 overflow-hidden font-sans"
+          className="relative w-full max-w-md bg-[#1f2229] border border-amber-400/40 rounded-2xl p-6 sm:p-8 text-center shadow-2xl shadow-amber-500/20 overflow-hidden font-sans"
         >
           {/* Ethereal Glow Background matching Wizeffgmbers */}
           <div className="absolute -top-24 -left-24 w-48 h-48 bg-[#00f0ff]/10 rounded-full blur-3xl pointer-events-none" />

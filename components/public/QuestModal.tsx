@@ -181,12 +181,12 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-[#161821]/80 backdrop-blur-xl overflow-y-auto font-sans">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/50 overflow-y-auto font-sans">
         <motion.div
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
-          className="relative w-full max-w-2xl bg-[#21242d] border border-slate-700/60 rounded-2xl shadow-2xl shadow-black/50 overflow-hidden my-auto"
+          className="relative w-full max-w-2xl bg-[#1f2229] border border-slate-700/60 rounded-2xl shadow-2xl shadow-black/50 overflow-hidden my-auto"
         >
           {/* ── Wizard Grey Ambient Lighting & Feather Watermark ─── */}
           <div className="absolute top-0 right-0 w-80 h-80 bg-[#00f0ff]/[0.03] blur-[100px] pointer-events-none" />
@@ -227,7 +227,7 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
             </button>
           </div>
 
-          <form onSubmit={handleSubmit} className="p-5 sm:p-6 space-y-6 max-h-[75vh] overflow-y-auto relative z-10 bg-[#21242d]">
+          <form onSubmit={handleSubmit} className="p-5 sm:p-6 space-y-6 max-h-[75vh] overflow-y-auto relative z-10 bg-[#1f2229]">
             {/* Whitelist Paused Banner */}
             {!applicationEnabled && (
               <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs sm:text-sm font-sans flex items-center gap-3 shadow-md">
@@ -288,7 +288,7 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
                   value={walletAddress}
                   onChange={(e) => setWalletAddress(e.target.value.trim())}
                   placeholder="0x1234567890abcdef1234567890abcdef12345678"
-                  className="w-full px-4 py-3 bg-[#f4f4f6] text-[#111827] placeholder-slate-500 rounded-xl text-xs sm:text-sm font-mono font-bold border border-amber-400/60 shadow-[0_0_18px_rgba(245,158,11,0.25)] focus:outline-none focus:border-amber-400 focus:shadow-[0_0_26px_rgba(245,158,11,0.45)] focus:ring-2 focus:ring-amber-400/40 transition-all"
+                  className="h-12 w-full px-4 py-3 bg-[#282b35] text-white placeholder-slate-500 rounded-xl text-xs sm:text-sm font-mono font-bold border border-amber-400/60 shadow-[0_0_18px_rgba(245,158,11,0.25)] focus:outline-none focus:border-amber-400 focus:shadow-[0_0_26px_rgba(245,158,11,0.45)] focus:ring-2 focus:ring-amber-400/40 transition-all"
                 />
               </div>
 
