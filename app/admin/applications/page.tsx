@@ -20,6 +20,8 @@ export default function AdminApplicationsPage() {
       if (res.ok) {
         const data = await res.json();
         setApplications(data.applications || []);
+      } else if (res.status === 401) {
+        window.location.href = "/admin/login";
       }
     } catch (err) {
       console.error("Failed to load applications:", err);

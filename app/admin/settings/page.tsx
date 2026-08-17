@@ -29,6 +29,8 @@ export default function AdminSettingsPage() {
           setMaintenanceMode(Boolean(s.maintenanceMode));
           setDuplicateWalletPolicy(s.duplicateWalletPolicy || "strict");
         }
+      } else if (res.status === 401) {
+        window.location.href = "/admin/login";
       }
     } catch (err) {
       console.error("Failed to load settings:", err);
