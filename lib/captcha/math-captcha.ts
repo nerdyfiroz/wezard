@@ -5,7 +5,13 @@ type MathChallenge = {
   expiresAt: number;
 };
 
-const challengeMap = new Map<string, MathChallenge>();
+// Use globalThis to persist challengeMap across serverless invocations
+const globalForCaptcha = globalThis as unknown as {
+  mathCaptchaMap?: Map<string, MathChallenge>;
+};
+
+const challengeMap = globalForCaptcha.mathCaptchaMap ?? new Map<string, MathChallenge>();
+globalForCaptcha.mathCaptchaMap = challengeMap;
 
 /**
  * Generates simple, clean 2-number addition or multiplication math problems.
@@ -19,13 +25,11 @@ export function generateMathCaptcha(): { challengeId: string; question: string }
   let expectedAnswer = 0;
 
   if (isMultiplication) {
-    // 2-number Multiplication: 7 × 8 = ?
     const n1 = Math.floor(Math.random() * 8) + 2; // 2 to 9
     const n2 = Math.floor(Math.random() * 8) + 2; // 2 to 9
     question = `${n1} × ${n2} = ?`;
     expectedAnswer = n1 * n2;
   } else {
-    // 2-number Addition: 14 + 19 = ?
     const n1 = Math.floor(Math.random() * 30) + 5; // 5 to 34
     const n2 = Math.floor(Math.random() * 30) + 5; // 5 to 34
     question = `${n1} + ${n2} = ?`;
@@ -36,7 +40,7 @@ export function generateMathCaptcha(): { challengeId: string; question: string }
     id,
     question,
     expectedAnswer,
-    expiresAt: Date.now() + 10 * 60 * 1000, // 10 minutes TTL
+    expiresAt: Date.now() + 15 * 60 * 1000, // 15 minutes TTL
   });
 
   return { challengeId: id, question };
@@ -52,12 +56,12 @@ export function verifyMathCaptcha(challengeId?: string, userAnswer?: string | nu
 
   const challenge = challengeMap.get(challengeId);
   if (!challenge) {
-    return { success: false, error: "Math CAPTCHA expired. Please refresh the question." };
+    return { success: false, error: "Math CAPTCHA expired or invalid. Please answer the new question." };
   }
 
   if (Date.now() > challenge.expiresAt) {
     challengeMap.delete(challengeId);
-    return { success: false, error: "Math CAPTCHA expired. Please refresh the question." };
+    return { success: false, error: "Math CAPTCHA expired. Please answer the new question." };
   }
 
   const numericAnswer = Number(String(userAnswer).trim());

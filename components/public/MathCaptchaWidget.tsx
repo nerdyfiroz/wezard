@@ -5,9 +5,10 @@ import { Calculator, RefreshCw } from "lucide-react";
 
 interface MathCaptchaWidgetProps {
   onChallengeReady: (challengeId: string, answer: string) => void;
+  refreshTrigger?: number;
 }
 
-export function MathCaptchaWidget({ onChallengeReady }: MathCaptchaWidgetProps) {
+export function MathCaptchaWidget({ onChallengeReady, refreshTrigger }: MathCaptchaWidgetProps) {
   const [challengeId, setChallengeId] = useState("");
   const [question, setQuestion] = useState("");
   const [userAnswer, setUserAnswer] = useState("");
@@ -33,7 +34,7 @@ export function MathCaptchaWidget({ onChallengeReady }: MathCaptchaWidgetProps) 
 
   useEffect(() => {
     fetchChallenge();
-  }, []);
+  }, [refreshTrigger]);
 
   const handleAnswerChange = (val: string) => {
     setUserAnswer(val);
@@ -60,19 +61,19 @@ export function MathCaptchaWidget({ onChallengeReady }: MathCaptchaWidgetProps) 
       </div>
 
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-        {/* Math Question Display - Standard Clean Font (NOT pixelated) */}
+        {/* Math Question Display - Clean Plain English & Monospace Digits */}
         <div className="px-5 py-3 rounded-xl bg-obsidian border border-amber-400/40 text-amber-300 font-bold text-xl font-mono tracking-widest flex items-center justify-center shrink-0 min-w-[150px] shadow-inner select-none">
           {loading ? "..." : question || "7 + 8 = ?"}
         </div>
 
-        {/* Math Answer Input - Standard Clean Font (NOT pixelated) */}
+        {/* Math Answer Input - Clean Plain English Font */}
         <input
           type="number"
           required
           placeholder="Enter number"
           value={userAnswer}
           onChange={(e) => handleAnswerChange(e.target.value)}
-          className="flex-1 px-4 py-3 bg-fintech-card border border-fintech-border rounded-xl text-base text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 transition-colors font-mono tracking-wider"
+          className="flex-1 px-4 py-3 bg-fintech-card border border-fintech-border rounded-xl text-base text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 transition-colors font-sans tracking-wide"
         />
       </div>
     </div>

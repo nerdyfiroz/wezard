@@ -25,6 +25,7 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
 
   const [mathChallengeId, setMathChallengeId] = useState("");
   const [mathAnswer, setMathAnswer] = useState("");
+  const [captchaRefreshTrigger, setCaptchaRefreshTrigger] = useState(0);
 
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
@@ -133,6 +134,8 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
       if (!res.ok) {
         setErrorMsg(data.error || "Submission failed. Please check your inputs.");
         setLoading(false);
+        // Auto refresh Math CAPTCHA on error
+        setCaptchaRefreshTrigger((prev) => prev + 1);
         return;
       }
 
@@ -141,6 +144,8 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
     } catch (err) {
       setLoading(false);
       setErrorMsg("Something went wrong. Please try again.");
+      // Auto refresh Math CAPTCHA on error
+      setCaptchaRefreshTrigger((prev) => prev + 1);
     }
   };
 
@@ -148,7 +153,7 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-obsidian/90 backdrop-blur-xl overflow-y-auto font-pixel">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-obsidian/90 backdrop-blur-xl overflow-y-auto font-sans">
         <motion.div
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -161,7 +166,7 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
               <h3 className="font-display font-extrabold text-xl sm:text-2xl text-white tracking-wide">
                 WeZards Whitelist Quests
               </h3>
-              <p className="text-xs sm:text-sm text-fintech-subtext mt-1 font-pixel">
+              <p className="text-xs sm:text-sm text-fintech-subtext mt-1 font-sans">
                 Visit required links and submit your details to reserve your placement.
               </p>
             </div>
@@ -174,16 +179,16 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
           </div>
 
           <form onSubmit={handleSubmit} className="p-5 sm:p-6 space-y-6 max-h-[75vh] overflow-y-auto">
-            {/* Error Banner */}
+            {/* Clean Plain English Error Banner (NOT Pixelated) */}
             {errorMsg && (
-              <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs sm:text-sm flex items-center gap-3 font-pixel">
+              <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm font-sans font-medium flex items-center gap-3 shadow-md">
                 <AlertCircle className="w-5 h-5 shrink-0" />
-                <span>{errorMsg}</span>
+                <span className="leading-relaxed">{errorMsg}</span>
               </div>
             )}
 
             {/* User Input Submission Details */}
-            <div id="submission-details-section" className="space-y-4">
+            <div id="submission-details-section" className="space-y-4 font-sans">
               <h4 className="text-sm sm:text-base font-mono font-bold uppercase tracking-wider text-amber-300">
                 1. Required Submission Details
               </h4>
@@ -191,7 +196,7 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
               <div className="space-y-4">
                 {/* EVM Wallet */}
                 <div>
-                  <label className="block text-xs sm:text-sm text-slate-300 font-semibold mb-1.5 font-pixel">
+                  <label className="block text-xs sm:text-sm text-slate-300 font-semibold mb-1.5 font-sans">
                     EVM Wallet Address <span className="text-amber-400">*</span>
                   </label>
                   <div className="relative">
@@ -213,7 +218,7 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
 
                 {/* Twitter / X Username */}
                 <div>
-                  <label className="block text-xs sm:text-sm text-slate-300 font-semibold mb-1.5 font-pixel">
+                  <label className="block text-xs sm:text-sm text-slate-300 font-semibold mb-1.5 font-sans">
                     X / Twitter Username <span className="text-amber-400">*</span>
                   </label>
                   <div className="relative">
@@ -226,14 +231,14 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
                       placeholder="@yourusername"
                       value={twitterUsername}
                       onChange={(e) => setTwitterUsername(e.target.value)}
-                      className="w-full pl-11 pr-4 py-3 bg-obsidian-light border border-fintech-border rounded-xl text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 transition-colors font-pixel"
+                      className="w-full pl-11 pr-4 py-3 bg-obsidian-light border border-fintech-border rounded-xl text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 transition-colors font-sans"
                     />
                   </div>
                 </div>
 
                 {/* Reply or Comment Link */}
                 <div>
-                  <label className="block text-xs sm:text-sm text-slate-300 font-semibold mb-1.5 font-pixel">
+                  <label className="block text-xs sm:text-sm text-slate-300 font-semibold mb-1.5 font-sans">
                     Reply or Comment Link <span className="text-amber-400">*</span>
                   </label>
                   <div className="relative">
@@ -253,7 +258,7 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
 
                 {/* Email (Optional) */}
                 <div>
-                  <label className="block text-xs sm:text-sm text-slate-300 font-semibold mb-1.5 font-pixel">
+                  <label className="block text-xs sm:text-sm text-slate-300 font-semibold mb-1.5 font-sans">
                     Email Address <span className="text-slate-500 text-xs">(Optional)</span>
                   </label>
                   <div className="relative">
@@ -265,7 +270,7 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
                       placeholder="wizard@domain.com"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="w-full pl-11 pr-4 py-3 bg-obsidian-light border border-fintech-border rounded-xl text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 transition-colors font-pixel"
+                      className="w-full pl-11 pr-4 py-3 bg-obsidian-light border border-fintech-border rounded-xl text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 transition-colors font-sans"
                     />
                   </div>
                 </div>
@@ -273,7 +278,7 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
             </div>
 
             {/* Quests Task List & Progress Bar */}
-            <div className="space-y-3 pt-2">
+            <div className="space-y-3 pt-2 font-sans">
               <h4 className="text-sm sm:text-base font-mono font-bold uppercase tracking-wider text-amber-300">
                 2. Whitelist Quests (Click "Open Link" or "Fill Details" to complete)
               </h4>
@@ -292,8 +297,9 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
               </div>
             </div>
 
-            {/* 2-Number Math CAPTCHA Widget */}
+            {/* 2-Number Math CAPTCHA Widget with Auto Refresh */}
             <MathCaptchaWidget
+              refreshTrigger={captchaRefreshTrigger}
               onChallengeReady={(challengeId, answer) => {
                 setMathChallengeId(challengeId);
                 setMathAnswer(answer);
