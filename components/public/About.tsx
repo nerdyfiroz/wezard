@@ -42,7 +42,7 @@ const TRAITS = [
   },
   {
     icon: "🪶",
-    title: "On Robinhood Crypto",
+    title: "On Robinhood Chain",
     desc: "Exclusively minting on @robinhoodcrypto — bringing magic to one of the world's most trusted platforms.",
   },
 ];

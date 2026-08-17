@@ -222,8 +222,6 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
                 Whitelist Quests
               </h4>
 
-              <ProgressBar completedCount={completedRequiredCount} totalCount={requiredTasks.length} />
-
               <div className="space-y-3">
                 {tasks.map((task) => (
                   <TaskItem
@@ -297,7 +295,7 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
                   <span>SUBMIT WHITELIST APPLICATION</span>
                 </>
               ) : (
-                <span>COMPLETE QUESTS & ENTER WALLET ({completedRequiredCount}/{requiredTasks.length})</span>
+                <span>COMPLETE QUESTS & ENTER WALLET</span>
               )}
             </button>
           </form>

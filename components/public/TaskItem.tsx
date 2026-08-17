@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
-import { Check, ExternalLink, Sparkles, Globe, Wallet, Link2, AlertCircle } from "lucide-react";
+import React from "react";
+import { Check, Sparkles, Globe, Wallet, Link2, AlertCircle, ExternalLink } from "lucide-react";
 import { Task } from "@/lib/db/schema";
 import { XLogo } from "./Navbar";
 
@@ -13,18 +13,52 @@ interface TaskItemProps {
   onProofChange: (taskId: string, value: string) => void;
 }
 
-export function TaskItem({ task, isCompleted, proofValue, onVisitTask, onProofChange }: TaskItemProps) {
-  const isCombinedFollow = task.title.includes("@We_Zards") && task.title.includes("@SickickZards");
+export function TaskItem({
+  task,
+  isCompleted,
+  proofValue,
+  onVisitTask,
+  onProofChange,
+}: TaskItemProps) {
+  const isCombinedFollow =
+    task.title.toLowerCase().includes("@we_zards") ||
+    task.title.toLowerCase().includes("follow");
+  const isLikeRepost =
+    task.type === "x_repost" ||
+    task.type === "x_like" ||
+    task.title.toLowerCase().includes("like") ||
+    task.title.toLowerCase().includes("repost") ||
+    task.title.toLowerCase().includes("retweet");
+  const isComment =
+    task.title.toLowerCase().includes("comment") ||
+    task.description.toLowerCase().includes("comment");
 
-  // Always show proof box for each task unless explicitly set to "__disabled__"
+  // Determine proof label based on task type
+  let defaultProofLabel = "Submit Task Proof Link";
+  let defaultPlaceholder = "https://x.com/... (paste link or proof)";
+
+  if (isCombinedFollow || task.type === "x_follow") {
+    defaultProofLabel = "Submit your X Handle";
+    defaultPlaceholder = "@yourusername (or profile link)";
+  } else if (isComment) {
+    defaultProofLabel = "Submit your Comment link";
+    defaultPlaceholder = "https://x.com/.../status/... (comment link)";
+  } else if (isLikeRepost) {
+    defaultProofLabel = "Submit your Retweet link";
+    defaultPlaceholder = "https://x.com/.../status/... (retweet/quote link)";
+  } else if (task.type === "submit_wallet") {
+    defaultProofLabel = "Submit your EVM Wallet Address";
+    defaultPlaceholder = "0x1234567890abcdef1234567890abcdef12345678";
+  }
+
+  const proofLabelText =
+    task.proofLabel && task.proofLabel.trim().length > 0
+      ? task.proofLabel
+      : defaultProofLabel;
+
   const hasProofBox = task.proofLabel !== "__disabled__";
-  const proofLabelText = task.proofLabel && task.proofLabel.trim().length > 0
-    ? task.proofLabel
-    : "Submit Task Proof Link / Verification URL";
-  const isProofFilled = !hasProofBox || !task.proofRequired || proofValue.trim().length > 3;
-
-  // Task is "visited" when they clicked the link OR filled proof
-  const isVisited = isCompleted;
+  const isProofFilled =
+    !hasProofBox || !task.proofRequired || proofValue.trim().length > 1;
 
   const getIcon = () => {
     switch (task.type) {
@@ -41,19 +75,112 @@ export function TaskItem({ task, isCompleted, proofValue, onVisitTask, onProofCh
     }
   };
 
-  const handleAction = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (isCombinedFollow) {
-      window.open("https://x.com/We_Zards", "_blank", "noopener,noreferrer");
-      window.open("https://x.com/SickickZards", "_blank", "noopener,noreferrer");
-      onVisitTask(task.id, "https://x.com/We_Zards");
-    } else {
-      onVisitTask(task.id, task.url);
+  // Render Title with embedded links for usernames / actions
+  const renderInteractiveTitle = () => {
+    if (
+      task.title.includes("@We_Zards") &&
+      task.title.includes("@SickickZards")
+    ) {
+      return (
+        <span className="font-display font-bold text-base sm:text-lg text-white">
+          Follow{" "}
+          <a
+            href="https://x.com/We_Zards"
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(e) => {
+              e.stopPropagation();
+              onVisitTask(task.id, "https://x.com/We_Zards");
+            }}
+            className="text-amber-300 hover:text-amber-200 underline decoration-amber-400/50 hover:decoration-amber-300 transition-colors inline-flex items-center gap-0.5"
+          >
+            @We_Zards <ExternalLink className="w-3 h-3 inline opacity-70" />
+          </a>{" "}
+          and{" "}
+          <a
+            href="https://x.com/SickickZards"
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(e) => {
+              e.stopPropagation();
+              onVisitTask(task.id, "https://x.com/SickickZards");
+            }}
+            className="text-amber-300 hover:text-amber-200 underline decoration-amber-400/50 hover:decoration-amber-300 transition-colors inline-flex items-center gap-0.5"
+          >
+            @SickickZards <ExternalLink className="w-3 h-3 inline opacity-70" />
+          </a>
+        </span>
+      );
     }
-  };
 
-  const buttonLabel = task.url && task.url.trim().length > 0 ? "Open Link" : "Fill Details";
+    if (
+      task.title.toLowerCase().includes("like") &&
+      (task.title.toLowerCase().includes("repost") ||
+        task.title.toLowerCase().includes("retweet"))
+    ) {
+      const targetUrl = task.url && task.url.length > 0 ? task.url : "https://x.com/We_Zards";
+      return (
+        <span className="font-display font-bold text-base sm:text-lg text-white">
+          <a
+            href={targetUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(e) => {
+              e.stopPropagation();
+              onVisitTask(task.id, targetUrl);
+            }}
+            className="text-amber-300 hover:text-amber-200 underline decoration-amber-400/50 hover:decoration-amber-300 transition-colors inline-flex items-center gap-1"
+          >
+            {task.title} <ExternalLink className="w-3.5 h-3.5 inline opacity-70" />
+          </a>
+        </span>
+      );
+    }
+
+    if (isComment) {
+      const targetUrl = task.url && task.url.length > 0 ? task.url : "https://x.com/We_Zards";
+      return (
+        <span className="font-display font-bold text-base sm:text-lg text-white">
+          <a
+            href={targetUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(e) => {
+              e.stopPropagation();
+              onVisitTask(task.id, targetUrl);
+            }}
+            className="text-amber-300 hover:text-amber-200 underline decoration-amber-400/50 hover:decoration-amber-300 transition-colors inline-flex items-center gap-1"
+          >
+            {task.title} <ExternalLink className="w-3.5 h-3.5 inline opacity-70" />
+          </a>
+        </span>
+      );
+    }
+
+    // Default clickable link if URL exists
+    if (task.url && task.url.trim().length > 0) {
+      return (
+        <a
+          href={task.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={(e) => {
+            e.stopPropagation();
+            onVisitTask(task.id, task.url);
+          }}
+          className="font-display font-bold text-base sm:text-lg text-amber-300 hover:text-amber-200 underline decoration-amber-400/50 hover:decoration-amber-300 transition-colors inline-flex items-center gap-1"
+        >
+          {task.title} <ExternalLink className="w-3.5 h-3.5 inline opacity-70" />
+        </a>
+      );
+    }
+
+    return (
+      <span className="font-display font-bold text-base sm:text-lg text-white">
+        {task.title}
+      </span>
+    );
+  };
 
   return (
     <div
@@ -63,79 +190,57 @@ export function TaskItem({ task, isCompleted, proofValue, onVisitTask, onProofCh
           : "bg-fintech-card/80 border-fintech-border"
       }`}
     >
-      {/* Main Task Row */}
-      <div
-        onClick={handleAction}
-        className="p-4 sm:p-5 cursor-pointer flex flex-col sm:flex-row sm:items-center justify-between gap-4 font-pixel hover:bg-white/[0.02] transition-colors"
-      >
-        <div className="flex items-start gap-4">
-          {/* Icon / Checkmark */}
-          <div
-            className={`mt-0.5 w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border font-pixel ${
-              isCompleted && isProofFilled
-                ? "bg-gradient-to-r from-amber-300 to-amber-500 text-obsidian border-amber-400 font-bold shadow-md shadow-amber-400/20"
-                : "bg-obsidian-light text-slate-400 border-fintech-border group-hover:border-amber-400/30"
-            }`}
-          >
-            {isCompleted && isProofFilled ? <Check className="w-6 h-6 stroke-[3]" /> : getIcon()}
-          </div>
-
-          <div className="flex flex-col">
-            <div className="flex items-center gap-2.5 flex-wrap">
-              <h4
-                className={`font-display font-bold text-base sm:text-lg ${
-                  isCompleted && isProofFilled ? "text-amber-200" : "text-white"
-                }`}
-              >
-                {task.title}
-              </h4>
-
-              {task.required ? (
-                <span className="px-2.5 py-0.5 text-xs font-mono font-semibold rounded bg-amber-400/10 text-amber-300 border border-amber-400/30">
-                  REQUIRED
-                </span>
-              ) : (
-                <span className="px-2.5 py-0.5 text-xs font-mono rounded bg-slate-800 text-slate-400 border border-slate-700">
-                  OPTIONAL
-                </span>
-              )}
-            </div>
-
-            <p className="text-xs sm:text-sm text-fintech-subtext mt-1 leading-relaxed font-pixel">{task.description}</p>
-          </div>
+      {/* Main Task Row (No Open Link button) */}
+      <div className="p-4 sm:p-5 flex items-start gap-4 font-pixel">
+        {/* Icon / Checkmark */}
+        <div
+          className={`mt-0.5 w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border font-pixel ${
+            isCompleted && isProofFilled
+              ? "bg-gradient-to-r from-amber-300 to-amber-500 text-obsidian border-amber-400 font-bold shadow-md shadow-amber-400/20"
+              : "bg-obsidian-light text-slate-400 border-fintech-border group-hover:border-amber-400/30"
+          }`}
+        >
+          {isCompleted && isProofFilled ? (
+            <Check className="w-6 h-6 stroke-[3]" />
+          ) : (
+            getIcon()
+          )}
         </div>
 
-        {/* Action Button */}
-        <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
-          {isCompleted && isProofFilled ? (
-            <div className="px-4 py-2 rounded-xl text-xs sm:text-sm font-mono font-bold bg-amber-400/20 text-amber-300 border border-amber-400/40 flex items-center gap-1.5 shadow-sm shadow-amber-400/10">
-              <span className="font-pixel text-base">✓</span>
-              <span>Completed</span>
-            </div>
-          ) : (
-            <button
-              type="button"
-              onClick={handleAction}
-              className="px-4 py-2 rounded-xl text-xs sm:text-sm font-mono font-bold bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-500 hover:from-yellow-300 hover:to-amber-400 text-obsidian border border-amber-400/40 transition-all flex items-center gap-1.5 shadow-md shadow-amber-500/20 hover:scale-[1.02]"
-            >
-              <span>{buttonLabel}</span>
-              <ExternalLink className="w-4 h-4 stroke-[2.5]" />
-            </button>
-          )}
+        <div className="flex-1 flex flex-col">
+          <div className="flex items-center gap-2.5 flex-wrap">
+            {renderInteractiveTitle()}
+
+            {task.required ? (
+              <span className="px-2.5 py-0.5 text-xs font-mono font-semibold rounded bg-amber-400/10 text-amber-300 border border-amber-400/30">
+                REQUIRED
+              </span>
+            ) : (
+              <span className="px-2.5 py-0.5 text-xs font-mono rounded bg-slate-800 text-slate-400 border border-slate-700">
+                OPTIONAL
+              </span>
+            )}
+          </div>
+
+          <p className="text-xs sm:text-sm text-fintech-subtext mt-1.5 leading-relaxed font-pixel">
+            {task.description}
+          </p>
         </div>
       </div>
 
       {/* ── Proof Box (underneath each task) ── */}
       {hasProofBox && (
         <div className="px-4 pb-4 sm:px-5 sm:pb-5">
-          <div className={`rounded-xl border p-3 transition-all ${
-            proofValue.trim().length > 3
-              ? "border-cyan-400/40 bg-cyan-500/5"
-              : "border-fintech-border/60 bg-obsidian-light/40"
-          }`}>
-            <label className="flex items-center gap-1.5 text-[11px] font-mono font-semibold mb-2 text-slate-300">
+          <div
+            className={`rounded-xl border p-3.5 transition-all ${
+              proofValue.trim().length > 1
+                ? "border-cyan-400/40 bg-cyan-500/5"
+                : "border-fintech-border/60 bg-obsidian-light/40"
+            }`}
+          >
+            <label className="flex items-center gap-1.5 text-xs font-mono font-semibold mb-2 text-slate-200">
               <Link2 className="w-3.5 h-3.5 text-cyan-400" />
-              <span>{proofLabelText}</span>
+              <span className="text-cyan-300 font-bold">{proofLabelText}</span>
               {task.proofRequired && (
                 <span className="ml-1 px-1.5 py-0.5 rounded text-[9px] bg-cyan-400/10 text-cyan-400 border border-cyan-400/30 font-bold">
                   REQUIRED
@@ -143,17 +248,16 @@ export function TaskItem({ task, isCompleted, proofValue, onVisitTask, onProofCh
               )}
             </label>
             <input
-              type="url"
+              type="text"
               value={proofValue}
               onChange={(e) => onProofChange(task.id, e.target.value)}
-              onClick={(e) => e.stopPropagation()}
-              placeholder="https://x.com/... (paste link or proof)"
-              className="w-full px-3 py-2.5 bg-obsidian border border-fintech-border/60 rounded-lg text-xs text-white placeholder-slate-600 focus:outline-none focus:border-cyan-400/50 focus:ring-1 focus:ring-cyan-400/20 transition-all font-mono"
+              placeholder={defaultPlaceholder}
+              className="w-full px-3 py-2.5 bg-obsidian border border-fintech-border/60 rounded-lg text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400/50 focus:ring-1 focus:ring-cyan-400/20 transition-all font-mono"
             />
-            {task.proofRequired && isCompleted && proofValue.trim().length <= 3 && (
+            {task.proofRequired && isCompleted && proofValue.trim().length === 0 && (
               <p className="mt-1.5 text-[10px] text-amber-400/80 flex items-center gap-1">
                 <AlertCircle className="w-3 h-3" />
-                Proof link required to complete this task
+                Proof required to complete this task
               </p>
             )}
           </div>

@@ -11,18 +11,18 @@ const config: Config = {
     extend: {
       colors: {
         obsidian: {
-          DEFAULT: "#090C10",
-          light: "#0E131C",
-          lighter: "#141C2A",
+          DEFAULT: "#13151d",
+          light: "#181a24",
+          lighter: "#1e212e",
         },
         fintech: {
           green: "#10B981",
           "green-hover": "#059669",
           "green-glow": "rgba(16, 185, 129, 0.25)",
-          dark: "#0C131D",
-          card: "#121A28",
-          border: "rgba(255, 255, 255, 0.08)",
-          subtext: "#8E9BAE",
+          dark: "#13151d",
+          card: "#181b25",
+          border: "rgba(255, 255, 255, 0.09)",
+          subtext: "#94A3B8",
         },
         arcane: {
           purple: "#8B5CF6",
