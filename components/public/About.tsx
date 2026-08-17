@@ -183,66 +183,6 @@ export function About() {
             </motion.div>
           ))}
         </div>
-
-        {/* ── Artist Credit Banner ──────────────────────────────────────── */}
-        <motion.div
-          initial={{ opacity: 0, y: 24 }}
-          animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.65, delay: 0.4 }}
-          className="relative rounded-2xl border border-amber-400/20 bg-gradient-to-br from-amber-400/[0.07] via-fintech-card to-purple-500/[0.05] p-8 sm:p-10 overflow-hidden text-center"
-        >
-          {/* Decorative corner sparkles */}
-          <Sparkles className="absolute top-4 left-4 w-4 h-4 text-amber-400/30 animate-pulse" />
-          <Sparkles className="absolute bottom-4 right-4 w-4 h-4 text-purple-400/30 animate-pulse" />
-
-          {/* Orb glow */}
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 rounded-full bg-amber-400/5 blur-[80px] pointer-events-none" />
-
-          <div className="relative">
-            <p className="font-pixel text-[11px] sm:text-xs tracking-widest uppercase text-amber-400/60 mb-4">
-              ✦ The Artist Behind the Magic ✦
-            </p>
-
-            <blockquote className="text-white font-sans text-base sm:text-lg leading-relaxed max-w-2xl mx-auto mb-6">
-              <span className="text-slate-300">
-                &ldquo;Each and every trait crafted with{" "}
-              </span>
-              <span className="text-amber-300 font-semibold">emotions, patience,</span>
-              <span className="text-slate-300">
-                {" "}and countless hours of work.
-              </span>
-              <br />
-              <span className="text-slate-300">No shortcuts. Just </span>
-              <span className="bg-clip-text text-transparent bg-gradient-to-r from-amber-200 to-yellow-400 font-bold">
-                pure magic
-              </span>
-              <span className="text-slate-300">, pixel by pixel.&rdquo;</span>
-            </blockquote>
-
-            <div className="flex items-center justify-center gap-3">
-              <div className="flex flex-col items-center">
-                <a
-                  href="https://x.com/SickickZards"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-white/10 bg-white/5 hover:bg-white/10 hover:border-amber-400/30 text-sm font-mono text-amber-200 transition-all duration-200 hover:shadow-lg hover:shadow-amber-400/10 group"
-                >
-                  <span className="text-lg">🧙‍♂️</span>
-                  <span>@SickickZards</span>
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                    className="w-3.5 h-3.5 text-slate-400 group-hover:text-white transition-colors"
-                  >
-                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.253 5.622 5.91-5.622Zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-                  </svg>
-                </a>
-                <span className="text-[10px] text-slate-600 font-mono mt-2 uppercase tracking-widest">Creator & Artist</span>
-              </div>
-            </div>
-          </div>
-        </motion.div>
-
       </div>
     </section>
   );
