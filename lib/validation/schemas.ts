@@ -8,7 +8,16 @@ export const whitelistSubmitSchema = z.object({
     .string()
     .trim()
     .regex(evmAddressRegex, { message: "Invalid EVM wallet address. Must start with 0x followed by 40 hex characters." }),
-  proofDetails: z.string().trim().max(1000, "Proof details must be under 1000 characters.").optional().or(z.literal("")),
+  twitterUsername: z
+    .string()
+    .trim()
+    .min(2, { message: "X/Twitter username must be at least 2 characters." })
+    .max(50, { message: "X/Twitter handle is too long." })
+    .transform((val) => (val.startsWith("@") ? val : `@${val}`)),
+  replyCommentLink: z
+    .string()
+    .trim()
+    .min(5, { message: "Please provide your X/Twitter reply or comment link." }),
   email: z.string().trim().email({ message: "Invalid email address format." }).optional().or(z.literal("")),
   completedTaskIds: z.array(z.string()).min(1, { message: "You must complete all required quests." }),
   mathChallengeId: z.string().min(1, { message: "Math CAPTCHA challenge ID is required." }),

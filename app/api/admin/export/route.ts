@@ -13,7 +13,8 @@ export async function GET() {
   try {
     let entries: Array<{
       walletAddress: string;
-      proofDetails: string | null;
+      twitterUsername: string;
+      replyCommentLink: string;
       email: string | null;
       status: string;
       createdAt: Date;
@@ -25,10 +26,11 @@ export async function GET() {
       entries = memoryStore.getEntries();
     }
 
-    const headers = ["wallet_address", "proof_details", "email", "status", "created_at"];
+    const headers = ["wallet_address", "twitter_username", "reply_comment_link", "email", "status", "created_at"];
     const rows = entries.map((e) => [
       `"${e.walletAddress}"`,
-      `"${(e.proofDetails || "").replace(/"/g, '""')}"`,
+      `"${e.twitterUsername}"`,
+      `"${(e.replyCommentLink || "").replace(/"/g, '""')}"`,
       `"${e.email || ""}"`,
       `"${e.status}"`,
       `"${new Date(e.createdAt).toISOString()}"`,

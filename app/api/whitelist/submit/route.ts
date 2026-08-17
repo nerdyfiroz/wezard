@@ -4,7 +4,7 @@ import { verifyMathCaptcha } from "@/lib/captcha/math-captcha";
 import { checkRateLimit } from "@/lib/security/rate-limit";
 import { db, isDbConfigured, memoryStore } from "@/lib/db";
 import { whitelistEntries, tasks, taskCompletions } from "@/lib/db/schema";
-import { eq, and } from "drizzle-orm";
+import { eq, or, and } from "drizzle-orm";
 
 export async function POST(req: NextRequest) {
   try {
@@ -27,7 +27,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: firstError }, { status: 400 });
     }
 
-    const { walletAddress, proofDetails, email, completedTaskIds, mathChallengeId, mathAnswer } = validation.data;
+    const { walletAddress, twitterUsername, replyCommentLink, email, completedTaskIds, mathChallengeId, mathAnswer } =
+      validation.data;
 
     // 3. Math CAPTCHA Server Verification
     const captchaResult = verifyMathCaptcha(mathChallengeId, mathAnswer);
@@ -36,6 +37,7 @@ export async function POST(req: NextRequest) {
     }
 
     const normalizedWallet = walletAddress.toLowerCase();
+    const normalizedTwitter = twitterUsername.toLowerCase();
 
     // 4. Server-Side Verification: Ensure 100% of REQUIRED tasks are completed
     let requiredTaskIds: string[] = [];
@@ -60,18 +62,32 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 5. Check duplicate wallet
+    // 5. Check duplicate wallet & Twitter username
     if (isDbConfigured && db) {
       const existing = await db
         .select()
         .from(whitelistEntries)
-        .where(eq(whitelistEntries.walletAddress, normalizedWallet));
+        .where(
+          or(
+            eq(whitelistEntries.walletAddress, normalizedWallet),
+            eq(whitelistEntries.twitterUsername, normalizedTwitter)
+          )
+        );
 
       if (existing.length > 0) {
-        return NextResponse.json(
-          { error: "That wallet address has already joined the WeZards whitelist." },
-          { status: 400 }
-        );
+        const match = existing[0];
+        if (match.walletAddress === normalizedWallet) {
+          return NextResponse.json(
+            { error: "That wallet address has already joined the WeZards whitelist." },
+            { status: 400 }
+          );
+        }
+        if (match.twitterUsername === normalizedTwitter) {
+          return NextResponse.json(
+            { error: "That X/Twitter username has already been registered." },
+            { status: 400 }
+          );
+        }
       }
 
       // Insert into PostgreSQL
@@ -79,7 +95,8 @@ export async function POST(req: NextRequest) {
         .insert(whitelistEntries)
         .values({
           walletAddress: normalizedWallet,
-          proofDetails: proofDetails || "",
+          twitterUsername: normalizedTwitter,
+          replyCommentLink,
           email: email || "",
           status: "pending",
         })
@@ -110,9 +127,17 @@ export async function POST(req: NextRequest) {
         );
       }
 
+      if (memoryStore.findEntryByTwitter(normalizedTwitter)) {
+        return NextResponse.json(
+          { error: "That X/Twitter username has already been registered." },
+          { status: 400 }
+        );
+      }
+
       const newEntry = memoryStore.addEntry({
         walletAddress: normalizedWallet,
-        proofDetails,
+        twitterUsername: normalizedTwitter,
+        replyCommentLink,
         email,
         completedTaskIds,
       });

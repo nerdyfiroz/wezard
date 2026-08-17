@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Wallet, Mail, FileText, ShieldCheck, AlertCircle, Loader2 } from "lucide-react";
+import { X, Wallet, Twitter, Link as LinkIcon, Mail, ShieldCheck, AlertCircle, Loader2 } from "lucide-react";
 import { ProgressBar } from "./ProgressBar";
 import { TaskItem } from "./TaskItem";
 import { MathCaptchaWidget } from "./MathCaptchaWidget";
@@ -19,7 +19,8 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [completedTaskIds, setCompletedTaskIds] = useState<string[]>([]);
   const [walletAddress, setWalletAddress] = useState("");
-  const [proofDetails, setProofDetails] = useState("");
+  const [twitterUsername, setTwitterUsername] = useState("");
+  const [replyCommentLink, setReplyCommentLink] = useState("");
   const [email, setEmail] = useState("");
 
   const [mathChallengeId, setMathChallengeId] = useState("");
@@ -68,6 +69,16 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
       return;
     }
 
+    if (!twitterUsername.trim()) {
+      setErrorMsg("X / Twitter username is required.");
+      return;
+    }
+
+    if (!replyCommentLink.trim()) {
+      setErrorMsg("Reply or comment link is required.");
+      return;
+    }
+
     if (!isAllRequiredCompleted) {
       setErrorMsg("You must complete 100% of the required quests before submitting.");
       return;
@@ -86,7 +97,8 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           walletAddress,
-          proofDetails,
+          twitterUsername,
+          replyCommentLink,
           email,
           completedTaskIds,
           mathChallengeId,
@@ -146,17 +158,17 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
               </div>
             )}
 
-            {/* Account Credentials Input Section */}
+            {/* User Input Submission Details */}
             <div className="space-y-4">
-              <h4 className="text-xs font-mono font-semibold uppercase tracking-wider text-slate-300">
-                1. Wallet & Task Proof Submission
+              <h4 className="text-xs font-mono font-semibold uppercase tracking-wider text-amber-300">
+                1. Submission Details
               </h4>
 
               <div className="space-y-4">
                 {/* EVM Wallet */}
                 <div>
                   <label className="block text-xs text-slate-300 font-medium mb-1.5">
-                    EVM Wallet Address <span className="text-fintech-green">*</span>
+                    EVM Wallet Address <span className="text-amber-400">*</span>
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
@@ -168,26 +180,47 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
                       placeholder="0x1234567890abcdef1234567890abcdef12345678"
                       value={walletAddress}
                       onChange={(e) => setWalletAddress(e.target.value)}
-                      className="w-full pl-9 pr-4 py-2.5 bg-obsidian-light border border-fintech-border rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-fintech-green transition-colors font-mono"
+                      className="w-full pl-9 pr-4 py-2.5 bg-obsidian-light border border-fintech-border rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 transition-colors font-mono"
                     />
                   </div>
                 </div>
 
-                {/* Proof Details / Handles / Links */}
+                {/* Twitter / X Username */}
                 <div>
                   <label className="block text-xs text-slate-300 font-medium mb-1.5">
-                    Task Proof / Social Handles <span className="text-slate-500 text-[10px]">(Optional proof link or handle)</span>
+                    X / Twitter Username <span className="text-amber-400">*</span>
                   </label>
                   <div className="relative">
-                    <div className="absolute top-3 left-3 flex items-start pointer-events-none text-slate-400">
-                      <FileText className="w-4 h-4" />
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                      <Twitter className="w-4 h-4 text-cyan-400" />
                     </div>
-                    <textarea
-                      rows={2}
-                      placeholder="Enter your X handle (e.g. @yourname) or proof links..."
-                      value={proofDetails}
-                      onChange={(e) => setProofDetails(e.target.value)}
-                      className="w-full pl-9 pr-4 py-2.5 bg-obsidian-light border border-fintech-border rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-fintech-green transition-colors font-sans resize-none"
+                    <input
+                      type="text"
+                      required
+                      placeholder="@yourusername"
+                      value={twitterUsername}
+                      onChange={(e) => setTwitterUsername(e.target.value)}
+                      className="w-full pl-9 pr-4 py-2.5 bg-obsidian-light border border-fintech-border rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 transition-colors font-sans"
+                    />
+                  </div>
+                </div>
+
+                {/* Reply or Comment Link */}
+                <div>
+                  <label className="block text-xs text-slate-300 font-medium mb-1.5">
+                    Reply or Comment Link <span className="text-amber-400">*</span>
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                      <LinkIcon className="w-4 h-4" />
+                    </div>
+                    <input
+                      type="url"
+                      required
+                      placeholder="https://x.com/We_Zards/status/..."
+                      value={replyCommentLink}
+                      onChange={(e) => setReplyCommentLink(e.target.value)}
+                      className="w-full pl-9 pr-4 py-2.5 bg-obsidian-light border border-fintech-border rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 transition-colors font-mono"
                     />
                   </div>
                 </div>
@@ -206,7 +239,7 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
                       placeholder="wizard@domain.com"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="w-full pl-9 pr-4 py-2.5 bg-obsidian-light border border-fintech-border rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-fintech-green transition-colors font-sans"
+                      className="w-full pl-9 pr-4 py-2.5 bg-obsidian-light border border-fintech-border rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 transition-colors font-sans"
                     />
                   </div>
                 </div>
@@ -215,7 +248,7 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
 
             {/* Quests Task List & Progress Bar */}
             <div className="space-y-3 pt-2">
-              <h4 className="text-xs font-mono font-semibold uppercase tracking-wider text-slate-300">
+              <h4 className="text-xs font-mono font-semibold uppercase tracking-wider text-amber-300">
                 2. Whitelist Quests
               </h4>
 
@@ -233,7 +266,7 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
               </div>
             </div>
 
-            {/* Math CAPTCHA Widget */}
+            {/* Diverse Math CAPTCHA Widget */}
             <MathCaptchaWidget
               onChallengeReady={(challengeId, answer) => {
                 setMathChallengeId(challengeId);
@@ -241,13 +274,13 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
               }}
             />
 
-            {/* Submit Button (Disabled unless 100% required tasks completed) */}
+            {/* Submit Button */}
             <button
               type="submit"
-              disabled={!isAllRequiredCompleted || !mathAnswer || loading}
+              disabled={!isAllRequiredCompleted || !walletAddress || !twitterUsername || !replyCommentLink || !mathAnswer || loading}
               className={`w-full py-4 rounded-xl font-display font-bold text-sm tracking-wider transition-all duration-200 shadow-xl flex items-center justify-center gap-2 ${
-                isAllRequiredCompleted && mathAnswer && !loading
-                  ? "bg-fintech-green text-obsidian hover:bg-fintech-green-hover shadow-fintech-green/25 cursor-pointer"
+                isAllRequiredCompleted && walletAddress && twitterUsername && replyCommentLink && mathAnswer && !loading
+                  ? "bg-gradient-to-r from-fintech-green to-emerald-400 text-obsidian hover:from-emerald-400 hover:to-fintech-green shadow-fintech-green/25 cursor-pointer"
                   : "bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700"
               }`}
             >
@@ -256,13 +289,13 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
                   <Loader2 className="w-5 h-5 animate-spin" />
                   <span>VERIFYING QUESTS...</span>
                 </>
-              ) : isAllRequiredCompleted && mathAnswer ? (
+              ) : isAllRequiredCompleted && walletAddress && twitterUsername && replyCommentLink && mathAnswer ? (
                 <>
                   <ShieldCheck className="w-5 h-5" />
                   <span>SUBMIT WHITELIST APPLICATION</span>
                 </>
               ) : (
-                <span>COMPLETE ALL REQUIRED QUESTS & MATH CAPTCHA ({completedRequiredCount}/{requiredTasks.length})</span>
+                <span>FILL DETAILS & COMPLETE QUESTS ({completedRequiredCount}/{requiredTasks.length})</span>
               )}
             </button>
           </form>

@@ -9,7 +9,7 @@ export const admins = pgTable("admins", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
-// Tasks (Quests) Table - Points removed per user request
+// Tasks (Quests) Table
 export const tasks = pgTable("tasks", {
   id: uuid("id").defaultRandom().primaryKey(),
   title: varchar("title", { length: 255 }).notNull(),
@@ -24,11 +24,12 @@ export const tasks = pgTable("tasks", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
-// Whitelist Entries Table - Simplified per user request (Wallet + Task Proofs, no Discord/Telegram/Referral)
+// Whitelist Entries Table (Wallet, Twitter Handle, Reply/Comment Link, Email)
 export const whitelistEntries = pgTable("whitelist_entries", {
   id: uuid("id").defaultRandom().primaryKey(),
   walletAddress: varchar("wallet_address", { length: 42 }).notNull(),
-  proofDetails: text("proof_details"), // Proof text/handles submitted by user
+  twitterUsername: varchar("twitter_username", { length: 100 }).notNull(),
+  replyCommentLink: text("reply_comment_link").notNull(),
   email: varchar("email", { length: 255 }),
   status: varchar("status", { length: 20 }).default("pending").notNull(), // pending, approved, rejected
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),

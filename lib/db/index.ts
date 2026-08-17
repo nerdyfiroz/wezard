@@ -8,14 +8,14 @@ export const isDbConfigured = Boolean(connectionString && connectionString.start
 const sql = isDbConfigured ? neon(connectionString!) : null;
 export const db = sql ? drizzle(sql, { schema }) : null;
 
-// Initial Default Tasks for WeZards (Points removed per specification)
+// Initial Default Tasks for WeZards
 export const DEFAULT_TASKS: schema.Task[] = [
   {
-    id: "task-1-x-follow",
-    title: "Follow @WeZardsNFT on X",
-    description: "Follow the official WeZards account on X / Twitter to stay updated with arcane announcements.",
+    id: "task-1-x-follow-project",
+    title: "Follow @We_Zards on X",
+    description: "Follow the official WeZards project account on X / Twitter to stay updated.",
     type: "x_follow",
-    url: "https://x.com/WeZardsNFT",
+    url: "https://x.com/We_Zards",
     required: true,
     verificationType: "url",
     active: true,
@@ -24,11 +24,11 @@ export const DEFAULT_TASKS: schema.Task[] = [
     updatedAt: new Date("2026-08-01"),
   },
   {
-    id: "task-2-x-repost",
-    title: "Repost WeZards Initiation Tweet",
-    description: "Spread the magic. Repost and like the official WeZards initiation announcement.",
-    type: "x_repost",
-    url: "https://x.com/WeZardsNFT/status/123456789",
+    id: "task-2-x-follow-artist",
+    title: "Follow @SickickZards (Artist) on X",
+    description: "Follow the official artist account of WeZards on X / Twitter.",
+    type: "x_follow",
+    url: "https://x.com/SickickZards",
     required: true,
     verificationType: "url",
     active: true,
@@ -37,12 +37,12 @@ export const DEFAULT_TASKS: schema.Task[] = [
     updatedAt: new Date("2026-08-01"),
   },
   {
-    id: "task-3-visit-url",
-    title: "Visit WeZards Realm",
-    description: "Visit the official WeZards realm portal to learn about the initiation ceremony.",
-    type: "visit_url",
-    url: "https://wezards.io",
-    required: false,
+    id: "task-3-x-repost",
+    title: "Like, Repost & Comment on WeZards Tweet",
+    description: "Engage with the official WeZards announcement post on X / Twitter.",
+    type: "x_repost",
+    url: "https://x.com/We_Zards",
+    required: true,
     verificationType: "url",
     active: true,
     sortOrder: 3,
@@ -51,8 +51,8 @@ export const DEFAULT_TASKS: schema.Task[] = [
   },
   {
     id: "task-4-submit-wallet",
-    title: "Submit EVM Wallet Address",
-    description: "Bind your primary Ethereum/EVM wallet address to your whitelist application.",
+    title: "Submit EVM Wallet & Proof",
+    description: "Enter your primary EVM address, X username, and reply/comment link below.",
     type: "submit_wallet",
     url: "",
     required: true,
@@ -70,7 +70,8 @@ class MemoryStore {
     {
       id: "e-1",
       walletAddress: "0x71C7656EC7ab88b098defB751B7401B5f6d8976F".toLowerCase(),
-      proofDetails: "X handle: @merlin_wiz",
+      twitterUsername: "@merlin_wiz",
+      replyCommentLink: "https://x.com/We_Zards/status/123456789",
       email: "merlin@wezards.io",
       status: "approved",
       createdAt: new Date("2026-08-10"),
@@ -79,7 +80,8 @@ class MemoryStore {
     {
       id: "e-2",
       walletAddress: "0x1234567890abcdef1234567890abcdef12345678".toLowerCase(),
-      proofDetails: "Completed all social tasks",
+      twitterUsername: "@gandalf_grey",
+      replyCommentLink: "https://x.com/SickickZards/status/987654321",
       email: "gandalf@valinor.org",
       status: "pending",
       createdAt: new Date("2026-08-15"),
@@ -90,7 +92,7 @@ class MemoryStore {
     {
       id: "tc-1",
       whitelistEntryId: "e-1",
-      taskId: "task-1-x-follow",
+      taskId: "task-1-x-follow-project",
       proofUrl: "",
       status: "completed",
       verifiedAt: new Date("2026-08-10"),
@@ -150,9 +152,15 @@ class MemoryStore {
     return this.whitelistEntries.find((e) => e.walletAddress.toLowerCase() === wallet.toLowerCase());
   }
 
+  findEntryByTwitter(handle: string) {
+    const clean = handle.replace("@", "").toLowerCase();
+    return this.whitelistEntries.find((e) => e.twitterUsername.replace("@", "").toLowerCase() === clean);
+  }
+
   addEntry(data: {
     walletAddress: string;
-    proofDetails?: string;
+    twitterUsername: string;
+    replyCommentLink: string;
     email?: string;
     completedTaskIds: string[];
   }) {
@@ -160,7 +168,8 @@ class MemoryStore {
     const newEntry: schema.WhitelistEntry = {
       id,
       walletAddress: data.walletAddress.toLowerCase(),
-      proofDetails: data.proofDetails || "",
+      twitterUsername: data.twitterUsername,
+      replyCommentLink: data.replyCommentLink,
       email: data.email || "",
       status: "pending",
       createdAt: new Date(),
