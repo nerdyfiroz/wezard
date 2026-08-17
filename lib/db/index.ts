@@ -8,12 +8,12 @@ export const isDbConfigured = Boolean(connectionString && connectionString.start
 const sql = isDbConfigured ? neon(connectionString!) : null;
 export const db = sql ? drizzle(sql, { schema }) : null;
 
-// Initial Default Tasks for WeZards
+// Clean Merged Default Tasks for WeZards
 export const DEFAULT_TASKS: schema.Task[] = [
   {
-    id: "task-1-x-follow-project",
-    title: "Follow @We_Zards on X",
-    description: "Follow the official WeZards project account on X / Twitter to stay updated.",
+    id: "task-1-x-follow-combined",
+    title: "Follow @We_Zards and @SickickZards",
+    description: "Follow the official project (@We_Zards) and artist (@SickickZards) accounts on X / Twitter.",
     type: "x_follow",
     url: "https://x.com/We_Zards",
     required: true,
@@ -24,20 +24,7 @@ export const DEFAULT_TASKS: schema.Task[] = [
     updatedAt: new Date("2026-08-01"),
   },
   {
-    id: "task-2-x-follow-artist",
-    title: "Follow @SickickZards (Artist) on X",
-    description: "Follow the official artist account of WeZards on X / Twitter.",
-    type: "x_follow",
-    url: "https://x.com/SickickZards",
-    required: true,
-    verificationType: "url",
-    active: true,
-    sortOrder: 2,
-    createdAt: new Date("2026-08-01"),
-    updatedAt: new Date("2026-08-01"),
-  },
-  {
-    id: "task-3-x-repost",
+    id: "task-2-x-repost",
     title: "Like, Repost & Comment on WeZards Tweet",
     description: "Engage with the official WeZards announcement post on X / Twitter.",
     type: "x_repost",
@@ -45,20 +32,7 @@ export const DEFAULT_TASKS: schema.Task[] = [
     required: true,
     verificationType: "url",
     active: true,
-    sortOrder: 3,
-    createdAt: new Date("2026-08-01"),
-    updatedAt: new Date("2026-08-01"),
-  },
-  {
-    id: "task-4-submit-wallet",
-    title: "Submit EVM Wallet & Proof",
-    description: "Enter your primary EVM address, X username, and reply/comment link below.",
-    type: "submit_wallet",
-    url: "",
-    required: true,
-    verificationType: "manual",
-    active: true,
-    sortOrder: 4,
+    sortOrder: 2,
     createdAt: new Date("2026-08-01"),
     updatedAt: new Date("2026-08-01"),
   },
@@ -77,28 +51,8 @@ class MemoryStore {
       createdAt: new Date("2026-08-10"),
       updatedAt: new Date("2026-08-10"),
     },
-    {
-      id: "e-2",
-      walletAddress: "0x1234567890abcdef1234567890abcdef12345678".toLowerCase(),
-      twitterUsername: "@gandalf_grey",
-      replyCommentLink: "https://x.com/SickickZards/status/987654321",
-      email: "gandalf@valinor.org",
-      status: "pending",
-      createdAt: new Date("2026-08-15"),
-      updatedAt: new Date("2026-08-15"),
-    },
   ];
-  taskCompletions: schema.TaskCompletion[] = [
-    {
-      id: "tc-1",
-      whitelistEntryId: "e-1",
-      taskId: "task-1-x-follow-project",
-      proofUrl: "",
-      status: "completed",
-      verifiedAt: new Date("2026-08-10"),
-      createdAt: new Date("2026-08-10"),
-    },
-  ];
+  taskCompletions: schema.TaskCompletion[] = [];
   settings: Record<string, any> = {
     captchaEnabled: true,
     emailRequired: false,
