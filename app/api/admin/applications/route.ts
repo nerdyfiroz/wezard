@@ -26,8 +26,7 @@ export async function GET(req: NextRequest) {
         entries = entries.filter(
           (e) =>
             e.walletAddress.toLowerCase().includes(search) ||
-            e.discordUsername.toLowerCase().includes(search) ||
-            e.twitterUsername.toLowerCase().includes(search) ||
+            (e.proofDetails && e.proofDetails.toLowerCase().includes(search)) ||
             (e.email && e.email.toLowerCase().includes(search))
         );
       }
@@ -44,8 +43,7 @@ export async function GET(req: NextRequest) {
         entries = entries.filter(
           (e) =>
             e.walletAddress.toLowerCase().includes(search) ||
-            e.discordUsername.toLowerCase().includes(search) ||
-            e.twitterUsername.toLowerCase().includes(search) ||
+            (e.proofDetails && e.proofDetails.toLowerCase().includes(search)) ||
             (e.email && e.email.toLowerCase().includes(search))
         );
       }
