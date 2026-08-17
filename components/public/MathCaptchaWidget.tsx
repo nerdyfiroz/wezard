@@ -24,7 +24,11 @@ export function MathCaptchaWidget({
     setLoading(true);
     setUserAnswer("");
     try {
-      const res = await fetch("/api/captcha/math");
+      // Cache-busting timestamp ensures a fresh question every refresh
+      const res = await fetch(`/api/captcha/math?t=${Date.now()}`, {
+        cache: "no-store",
+        headers: { "Cache-Control": "no-cache" },
+      });
       const data = await res.json();
       if (data.challengeId && data.question) {
         setChallengeId(data.challengeId);
