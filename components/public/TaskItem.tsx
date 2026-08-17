@@ -26,7 +26,9 @@ export function TaskItem({ task, isCompleted, onVisitTask }: TaskItemProps) {
     }
   };
 
-  const handleAction = () => {
+  const handleAction = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
     onVisitTask(task.id, task.url);
   };
 
@@ -86,10 +88,7 @@ export function TaskItem({ task, isCompleted, onVisitTask }: TaskItemProps) {
         ) : (
           <button
             type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleAction();
-            }}
+            onClick={handleAction}
             className="px-4 py-2 rounded-xl text-xs sm:text-sm font-mono font-bold bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-500 hover:from-yellow-300 hover:to-amber-400 text-obsidian border border-amber-400/40 transition-all flex items-center gap-1.5 shadow-md shadow-amber-500/20 hover:scale-[1.02]"
           >
             <span>{buttonLabel}</span>

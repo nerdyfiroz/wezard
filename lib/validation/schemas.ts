@@ -7,7 +7,9 @@ export const whitelistSubmitSchema = z.object({
   walletAddress: z
     .string()
     .trim()
-    .regex(evmAddressRegex, { message: "Invalid EVM wallet address. Must start with 0x followed by 40 hex characters." }),
+    .refine((val) => /^0x[a-fA-F0-9]{40}$/.test(val), {
+      message: "Invalid EVM wallet address. Must start with 0x followed by 40 hexadecimal characters (0-9, a-f).",
+    }),
   twitterUsername: z
     .string()
     .trim()
