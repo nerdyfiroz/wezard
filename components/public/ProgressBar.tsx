@@ -16,10 +16,10 @@ export function ProgressBar({ completedCount, totalCount }: ProgressBarProps) {
     <div className="w-full bg-fintech-card p-4 rounded-xl border border-fintech-border mb-6">
       <div className="flex items-center justify-between text-xs font-mono mb-2">
         <span className="text-slate-300 font-semibold flex items-center gap-2">
-          <span className={`w-2 h-2 rounded-full ${isAllDone ? "bg-fintech-green animate-pulse" : "bg-amber-400"}`} />
+          <span className={`w-2 h-2 rounded-full ${isAllDone ? "bg-amber-400 animate-pulse" : "bg-amber-500/50"}`} />
           {completedCount} / {totalCount} Required Quests Completed
         </span>
-        <span className={isAllDone ? "text-fintech-green font-bold" : "text-slate-400"}>
+        <span className={isAllDone ? "text-amber-300 font-bold" : "text-slate-400"}>
           {percentage}% Complete
         </span>
       </div>
@@ -31,8 +31,8 @@ export function ProgressBar({ completedCount, totalCount }: ProgressBarProps) {
           transition={{ duration: 0.5, ease: "easeOut" }}
           className={`h-full rounded-full transition-all duration-300 ${
             isAllDone
-              ? "bg-gradient-to-r from-fintech-green via-emerald-400 to-arcane-purple shadow-sm shadow-fintech-green"
-              : "bg-gradient-to-r from-fintech-green/60 to-emerald-500"
+              ? "bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-500 shadow-sm shadow-amber-400"
+              : "bg-gradient-to-r from-amber-400/60 to-yellow-500"
           }`}
         />
       </div>

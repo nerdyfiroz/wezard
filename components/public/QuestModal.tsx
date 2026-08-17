@@ -266,7 +266,7 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
               </div>
             </div>
 
-            {/* Diverse Math CAPTCHA Widget */}
+            {/* Math CAPTCHA Widget */}
             <MathCaptchaWidget
               onChallengeReady={(challengeId, answer) => {
                 setMathChallengeId(challengeId);
@@ -274,13 +274,13 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
               }}
             />
 
-            {/* Submit Button */}
+            {/* Golden Submit Button */}
             <button
               type="submit"
               disabled={!isAllRequiredCompleted || !walletAddress || !twitterUsername || !replyCommentLink || !mathAnswer || loading}
-              className={`w-full py-4 rounded-xl font-display font-bold text-sm tracking-wider transition-all duration-200 shadow-xl flex items-center justify-center gap-2 ${
+              className={`w-full py-4 rounded-xl font-display font-extrabold text-sm tracking-wider transition-all duration-200 shadow-xl flex items-center justify-center gap-2 ${
                 isAllRequiredCompleted && walletAddress && twitterUsername && replyCommentLink && mathAnswer && !loading
-                  ? "bg-gradient-to-r from-fintech-green to-emerald-400 text-obsidian hover:from-emerald-400 hover:to-fintech-green shadow-fintech-green/25 cursor-pointer"
+                  ? "bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-500 text-obsidian hover:from-yellow-300 hover:to-amber-400 shadow-amber-500/30 cursor-pointer hover:scale-[1.01]"
                   : "bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700"
               }`}
             >
@@ -291,7 +291,7 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
                 </>
               ) : isAllRequiredCompleted && walletAddress && twitterUsername && replyCommentLink && mathAnswer ? (
                 <>
-                  <ShieldCheck className="w-5 h-5" />
+                  <ShieldCheck className="w-5 h-5 stroke-[2.5]" />
                   <span>SUBMIT WHITELIST APPLICATION</span>
                 </>
               ) : (

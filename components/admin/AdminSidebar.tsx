@@ -31,22 +31,20 @@ export function AdminSidebar() {
       <div>
         {/* Admin Brand Logo */}
         <div className="flex items-center gap-3 px-3 py-4 mb-6 border-b border-fintech-border/50">
-          <div className="relative w-9 h-9 rounded-xl bg-gradient-to-br from-amber-300 via-yellow-500 to-amber-600 p-0.5 shadow-md shadow-amber-500/20">
-            <div className="w-full h-full bg-obsidian rounded-[8px] flex items-center justify-center p-1 overflow-hidden">
-              <Image
-                src="/Wizeffgmbers.png"
-                alt="WeZards Logo"
-                width={32}
-                height={32}
-                className="w-full h-full object-contain"
-              />
-            </div>
+          <div className="relative w-10 h-10 rounded-xl bg-gradient-to-br from-amber-300 via-yellow-400 to-amber-500 p-[2px] shadow-md shadow-amber-500/20 overflow-hidden">
+            <Image
+              src="/Wizeffgmbers.png"
+              alt="WeZards Logo"
+              width={40}
+              height={40}
+              className="w-full h-full object-cover rounded-[10px]"
+            />
           </div>
           <div>
-            <h2 className="font-display font-bold text-sm tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-amber-200 via-yellow-400 to-amber-500">
+            <h2 className="font-display font-bold text-sm tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-amber-100 via-yellow-300 to-amber-400">
               WEZARDS
             </h2>
-            <p className="text-[10px] text-amber-300/80 font-mono font-semibold">ADMIN SANCTUM</p>
+            <p className="text-[10px] text-amber-200/90 font-mono font-bold">ADMIN SANCTUM</p>
           </div>
         </div>
 
@@ -62,7 +60,7 @@ export function AdminSidebar() {
                 href={item.href}
                 className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold tracking-wide transition-all ${
                   isActive
-                    ? "bg-amber-500/15 text-amber-300 border border-amber-500/30 shadow-sm"
+                    ? "bg-amber-400/15 text-amber-300 border border-amber-400/30 shadow-sm"
                     : "text-slate-400 hover:text-white hover:bg-fintech-card"
                 }`}
               >
