@@ -57,7 +57,7 @@ export default function AdminDashboardPage() {
       {/* Top Bar Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-fintech-border/60 pb-6">
         <div>
-          <h1 className="font-display font-bold text-2xl text-white">WeZard Sanctum Dashboard</h1>
+          <h1 className="font-display font-bold text-2xl text-white">WeZards Sanctum Dashboard</h1>
           <p className="text-xs text-fintech-subtext mt-1">Real-time whitelist metrics and quest completion analytics.</p>
         </div>
         <div className="flex items-center gap-3">

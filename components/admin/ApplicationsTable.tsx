@@ -22,8 +22,7 @@ export function ApplicationsTable({ applications, onStatusChange, onDelete }: Ap
     const matchesSearch =
       !search ||
       app.walletAddress.toLowerCase().includes(query) ||
-      app.discordUsername.toLowerCase().includes(query) ||
-      app.twitterUsername.toLowerCase().includes(query) ||
+      (app.proofDetails && app.proofDetails.toLowerCase().includes(query)) ||
       (app.email && app.email.toLowerCase().includes(query));
 
     return matchesStatus && matchesSearch;
@@ -55,7 +54,7 @@ export function ApplicationsTable({ applications, onStatusChange, onDelete }: Ap
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <input
             type="text"
-            placeholder="Search wallet, Discord, Twitter, or email..."
+            placeholder="Search wallet, proof details, or email..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full pl-9 pr-4 py-2 bg-fintech-card border border-fintech-border rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-fintech-green transition-colors font-mono"
@@ -70,8 +69,7 @@ export function ApplicationsTable({ applications, onStatusChange, onDelete }: Ap
             <thead className="bg-obsidian-light/80 border-b border-fintech-border text-fintech-subtext font-mono text-[11px] uppercase tracking-wider">
               <tr>
                 <th className="py-3.5 px-4">Wallet Address</th>
-                <th className="py-3.5 px-4">Discord</th>
-                <th className="py-3.5 px-4">X / Twitter</th>
+                <th className="py-3.5 px-4">Task Proof Details</th>
                 <th className="py-3.5 px-4">Email</th>
                 <th className="py-3.5 px-4">Status</th>
                 <th className="py-3.5 px-4">Date</th>
@@ -81,7 +79,7 @@ export function ApplicationsTable({ applications, onStatusChange, onDelete }: Ap
             <tbody className="divide-y divide-fintech-border/50 text-slate-200">
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-8 text-center text-slate-500 font-mono">
+                  <td colSpan={6} className="py-8 text-center text-slate-500 font-mono">
                     No whitelist applications found.
                   </td>
                 </tr>
@@ -99,8 +97,9 @@ export function ApplicationsTable({ applications, onStatusChange, onDelete }: Ap
                         <ExternalLink className="w-3 h-3 text-slate-500" />
                       </a>
                     </td>
-                    <td className="py-3.5 px-4 font-mono text-slate-300">{app.discordUsername}</td>
-                    <td className="py-3.5 px-4 font-mono text-cyan-400">{app.twitterUsername}</td>
+                    <td className="py-3.5 px-4 text-slate-300 max-w-[200px] truncate">
+                      {app.proofDetails || "-"}
+                    </td>
                     <td className="py-3.5 px-4 text-slate-400">{app.email || "-"}</td>
                     <td className="py-3.5 px-4">
                       <span
@@ -172,16 +171,12 @@ export function ApplicationsTable({ applications, onStatusChange, onDelete }: Ap
                 <span className="text-fintech-subtext block text-[10px]">WALLET ADDRESS:</span>
                 <span className="text-fintech-green font-bold text-sm select-all">{selectedEntry.walletAddress}</span>
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              {selectedEntry.proofDetails && (
                 <div className="p-3 bg-obsidian-light rounded-xl border border-fintech-border">
-                  <span className="text-fintech-subtext block text-[10px]">DISCORD:</span>
-                  <span>{selectedEntry.discordUsername}</span>
+                  <span className="text-fintech-subtext block text-[10px]">PROOF DETAILS / HANDLES:</span>
+                  <span className="text-slate-200 whitespace-pre-wrap">{selectedEntry.proofDetails}</span>
                 </div>
-                <div className="p-3 bg-obsidian-light rounded-xl border border-fintech-border">
-                  <span className="text-fintech-subtext block text-[10px]">TWITTER / X:</span>
-                  <span className="text-cyan-400">{selectedEntry.twitterUsername}</span>
-                </div>
-              </div>
+              )}
               {selectedEntry.email && (
                 <div className="p-3 bg-obsidian-light rounded-xl border border-fintech-border">
                   <span className="text-fintech-subtext block text-[10px]">EMAIL:</span>

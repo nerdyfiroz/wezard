@@ -15,19 +15,19 @@ const outfit = Outfit({
 });
 
 export const metadata: Metadata = {
-  title: "WeZard — Enter the Circle",
-  description: "Complete the WeZard quests and earn your place in the circle.",
+  title: "WeZards — Enter the Circle",
+  description: "Complete the WeZards quests and earn your place in the circle.",
   openGraph: {
-    title: "WeZard — Enter the Circle",
-    description: "Complete the WeZard quests and earn your place in the circle.",
-    url: "https://wezard.io",
-    siteName: "WeZard Whitelist",
+    title: "WeZards — Enter the Circle",
+    description: "Complete the WeZards quests and earn your place in the circle.",
+    url: "https://wezards.io",
+    siteName: "WeZards Whitelist",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "WeZard — Enter the Circle",
-    description: "Complete the WeZard quests and earn your place in the circle.",
+    title: "WeZards — Enter the Circle",
+    description: "Complete the WeZards quests and earn your place in the circle.",
   },
   robots: {
     index: true,

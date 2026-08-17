@@ -2,7 +2,7 @@
 
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, CheckCircle2, Shield, X } from "lucide-react";
+import { Sparkles, X } from "lucide-react";
 
 interface SuccessModalProps {
   isOpen: boolean;
@@ -49,7 +49,7 @@ export function SuccessModal({ isOpen, onClose, walletAddress }: SuccessModalPro
 
           <div className="my-6 space-y-3 font-sans text-sm sm:text-base text-slate-300 leading-relaxed">
             <p className="font-medium text-fintech-green">
-              Your WeZard whitelist entry has been recorded.
+              Your WeZards whitelist entry has been recorded.
             </p>
             <p className="text-slate-300">
               Your place has been reserved in the sanctum.

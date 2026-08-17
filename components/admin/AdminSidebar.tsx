@@ -36,7 +36,7 @@ export function AdminSidebar() {
             </div>
           </div>
           <div>
-            <h2 className="font-display font-bold text-sm tracking-wider text-white">WEZARD</h2>
+            <h2 className="font-display font-bold text-sm tracking-wider text-white">WEZARDS</h2>
             <p className="text-[10px] text-fintech-subtext font-mono">ADMIN SANCTUM</p>
           </div>
         </div>

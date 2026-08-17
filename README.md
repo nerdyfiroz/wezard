@@ -1,6 +1,6 @@
-# WeZard Whitelist Quest Platform
+# WeZards Whitelist Quest Platform
 
-A production-ready whitelist quest website for the **WeZard** project. Built with a unique **Wizard × Robinhood** design identity—combining mystical dark magic aesthetics (purple/cyan particle glows, arcane runes, subtle stars) with modern fintech UI precision (emerald green CTAs, clean cards, sleek typography, micro-interactions).
+A production-ready whitelist quest website for the **WeZards** project. Built with a unique **Wizard × Robinhood** design identity—combining mystical dark magic aesthetics (purple/cyan particle glows, arcane rings, subtle stars) with modern fintech UI precision (emerald green CTAs, clean cards, sleek typography, micro-interactions).
 
 > ⚠️ **Strict Content Policy**: This platform is **EXCLUSIVELY a whitelist/quest platform**. It intentionally contains **NO NFT collection showcase**, no mint prices, no galleries, and no marketplace links.
 
@@ -10,17 +10,19 @@ A production-ready whitelist quest website for the **WeZard** project. Built wit
 
 - **Frontend**: Next.js 14+ (App Router), React, TypeScript, Tailwind CSS, Framer Motion, Lucide React, HTML5 Canvas particle engine.
 - **Backend**: Next.js Route Handlers, Zod Validation, HTTP-only secure cookie session auth.
+- **Security**: Embedded addition & multiplication **Math CAPTCHA** verification + sliding-window rate limiting.
 - **Database & ORM**: PostgreSQL (Neon-ready) with **Drizzle ORM**. Features an in-memory/fallback database adapter when `DATABASE_URL` is not configured, allowing instant local evaluation.
 - **Deployment**: Vercel & Neon PostgreSQL serverless compatible.
 
 ---
 
-## 🔒 Security & Anti-Abuse
+## ✨ Features & User Customizations
 
-1. **Unique Account Protection**: Prevents duplicate submissions for the same EVM wallet address (`0x...`), Twitter handle (`@...`), or Discord handle.
-2. **Server-Side Validation**: Enforces **100% completion of required tasks** on the server before accepting whitelist submissions. Never trusts frontend state.
-3. **CAPTCHA**: Cloudflare Turnstile token verification endpoint integration.
-4. **Admin Authentication**: Cookie-based HTTP-only session verification tied to `ADMIN_PASSWORD` and `ADMIN_USERNAME` environment variables.
+1. **Simplified Whitelist Form**: Users submit their EVM wallet address (`0x...`) and task proof details. No mandatory Discord, Telegram, or referral codes required!
+2. **Points-Free Quest System**: Clear Required / Optional task indicators without point badges. Admin can configure task requirements dynamically.
+3. **Simple Math CAPTCHA**: Built-in, user-friendly addition and multiplication math verification (e.g. `7 + 4 = ?` or `6 × 3 = ?`), validated server-side.
+4. **Server-Side Security**: Enforces **100% completion of required tasks** on the server before accepting whitelist submissions.
+5. **Admin Suite**: Cookie-based HTTP-only session verification tied to `ADMIN_PASSWORD` and `ADMIN_USERNAME` environment variables. Complete with real-time analytics, task CRUD, and CSV export.
 
 ---
 
@@ -28,7 +30,7 @@ A production-ready whitelist quest website for the **WeZard** project. Built wit
 
 ### 1. Install Dependencies
 ```bash
-wsl --cd /mnt/d/wezard npm install
+npm install
 ```
 
 ### 2. Environment Setup
@@ -39,7 +41,7 @@ cp .env.example .env
 
 ### 3. Run Development Server
 ```bash
-wsl --cd /mnt/d/wezard npm run dev
+npm run dev
 ```
 
 Visit [http://localhost:3000](http://localhost:3000) in your browser.
@@ -56,28 +58,10 @@ Visit [http://localhost:3000](http://localhost:3000) in your browser.
 
 ---
 
-## 🐘 Neon PostgreSQL Database Setup
+## 🌐 Push & Deploy
 
-1. Create a free database instance on [Neon](https://neon.tech).
-2. Copy your connection string (`postgres://...`).
-3. Set `DATABASE_URL` in `.env`.
-4. Run Drizzle database push:
-   ```bash
-   npm run db:push
-   ```
-
----
-
-## 🌐 Deploy to Vercel
-
-1. Push your repository to GitHub / GitLab.
-2. Import project in [Vercel](https://vercel.com).
-3. Add the following Environment Variables in Vercel settings:
-   - `DATABASE_URL`
-   - `ADMIN_USERNAME`
-   - `ADMIN_PASSWORD`
-   - `SESSION_SECRET`
-   - `TURNSTILE_SITE_KEY`
-   - `TURNSTILE_SECRET_KEY`
-   - `NEXT_PUBLIC_TURNSTILE_SITE_KEY`
-4. Click **Deploy**.
+```bash
+git add .
+git commit -m "refactor: update branding to WeZards, remove points, add Math CAPTCHA"
+git push -u origin main
+```

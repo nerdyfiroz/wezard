@@ -16,7 +16,6 @@ export function TaskEditorModal({ isOpen, onClose, onSave, initialTask }: TaskEd
   const [description, setDescription] = useState("");
   const [type, setType] = useState<Task["type"]>("x_follow");
   const [url, setUrl] = useState("");
-  const [points, setPoints] = useState(10);
   const [required, setRequired] = useState(true);
   const [active, setActive] = useState(true);
   const [verificationType, setVerificationType] = useState<Task["verificationType"]>("url");
@@ -29,7 +28,6 @@ export function TaskEditorModal({ isOpen, onClose, onSave, initialTask }: TaskEd
       setDescription(initialTask.description);
       setType(initialTask.type);
       setUrl(initialTask.url || "");
-      setPoints(initialTask.points);
       setRequired(initialTask.required);
       setActive(initialTask.active);
       setVerificationType(initialTask.verificationType);
@@ -39,7 +37,6 @@ export function TaskEditorModal({ isOpen, onClose, onSave, initialTask }: TaskEd
       setDescription("");
       setType("x_follow");
       setUrl("");
-      setPoints(10);
       setRequired(true);
       setActive(true);
       setVerificationType("url");
@@ -56,7 +53,6 @@ export function TaskEditorModal({ isOpen, onClose, onSave, initialTask }: TaskEd
         description,
         type,
         url,
-        points: Number(points),
         required,
         active,
         verificationType,
@@ -94,7 +90,7 @@ export function TaskEditorModal({ isOpen, onClose, onSave, initialTask }: TaskEd
               required
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="e.g. Follow @WeZardNFT on X"
+              placeholder="e.g. Follow @WeZardsNFT on X"
               className="w-full px-3 py-2 bg-obsidian-light border border-fintech-border rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-fintech-green"
             />
           </div>
@@ -122,8 +118,7 @@ export function TaskEditorModal({ isOpen, onClose, onSave, initialTask }: TaskEd
                 <option value="x_follow">X / Follow</option>
                 <option value="x_like">X / Like</option>
                 <option value="x_repost">X / Repost</option>
-                <option value="discord_join">Discord / Join</option>
-                <option value="telegram_join">Telegram / Join</option>
+                <option value="visit_url">Visit Website URL</option>
                 <option value="submit_wallet">Wallet Submission</option>
                 <option value="custom">Custom Task</option>
               </select>
@@ -149,32 +144,20 @@ export function TaskEditorModal({ isOpen, onClose, onSave, initialTask }: TaskEd
               type="url"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
-              placeholder="https://x.com/WeZardNFT"
+              placeholder="https://x.com/WeZardsNFT"
               className="w-full px-3 py-2 bg-obsidian-light border border-fintech-border rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-fintech-green font-mono"
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-slate-300 font-semibold mb-1">Points</label>
-              <input
-                type="number"
-                min={0}
-                value={points}
-                onChange={(e) => setPoints(Number(e.target.value))}
-                className="w-full px-3 py-2 bg-obsidian-light border border-fintech-border rounded-xl text-white focus:outline-none focus:border-fintech-green font-mono"
-              />
-            </div>
-            <div>
-              <label className="block text-slate-300 font-semibold mb-1">Display Order</label>
-              <input
-                type="number"
-                min={1}
-                value={sortOrder}
-                onChange={(e) => setSortOrder(Number(e.target.value))}
-                className="w-full px-3 py-2 bg-obsidian-light border border-fintech-border rounded-xl text-white focus:outline-none focus:border-fintech-green font-mono"
-              />
-            </div>
+          <div>
+            <label className="block text-slate-300 font-semibold mb-1">Display Order</label>
+            <input
+              type="number"
+              min={1}
+              value={sortOrder}
+              onChange={(e) => setSortOrder(Number(e.target.value))}
+              className="w-full px-3 py-2 bg-obsidian-light border border-fintech-border rounded-xl text-white focus:outline-none focus:border-fintech-green font-mono"
+            />
           </div>
 
           <div className="flex items-center gap-6 pt-2">

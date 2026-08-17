@@ -2,7 +2,7 @@
 
 import React from "react";
 import { motion } from "framer-motion";
-import { Sparkles, ArrowRight, Shield, Zap, Lock, Award } from "lucide-react";
+import { Sparkles, ArrowRight, Shield, Zap, Award } from "lucide-react";
 
 export function Hero({ onOpenQuests }: { onOpenQuests: () => void }) {
   return (
@@ -15,7 +15,7 @@ export function Hero({ onOpenQuests }: { onOpenQuests: () => void }) {
         className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-fintech-card/90 border border-fintech-green/30 text-fintech-green text-xs font-mono mb-8 shadow-lg shadow-fintech-green/10"
       >
         <Sparkles className="w-3.5 h-3.5 animate-pulse" />
-        <span className="tracking-widest uppercase text-[11px] font-medium">WEZARD INITIATION PHASE I</span>
+        <span className="tracking-widest uppercase text-[11px] font-medium">WEZARDS INITIATION PHASE I</span>
       </motion.div>
 
       {/* Main Headline */}
@@ -27,7 +27,7 @@ export function Hero({ onOpenQuests }: { onOpenQuests: () => void }) {
       >
         Enter the{" "}
         <span className="bg-clip-text text-transparent bg-gradient-to-r from-fintech-green via-emerald-300 to-arcane-purple drop-shadow-sm">
-          WeZard Circle
+          WeZards Circle
         </span>
       </motion.h1>
 

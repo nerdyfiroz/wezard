@@ -13,8 +13,7 @@ export async function GET() {
   try {
     let entries: Array<{
       walletAddress: string;
-      discordUsername: string;
-      twitterUsername: string;
+      proofDetails: string | null;
       email: string | null;
       status: string;
       createdAt: Date;
@@ -26,11 +25,10 @@ export async function GET() {
       entries = memoryStore.getEntries();
     }
 
-    const headers = ["wallet_address", "discord_username", "twitter_username", "email", "status", "created_at"];
+    const headers = ["wallet_address", "proof_details", "email", "status", "created_at"];
     const rows = entries.map((e) => [
       `"${e.walletAddress}"`,
-      `"${e.discordUsername}"`,
-      `"${e.twitterUsername}"`,
+      `"${(e.proofDetails || "").replace(/"/g, '""')}"`,
       `"${e.email || ""}"`,
       `"${e.status}"`,
       `"${new Date(e.createdAt).toISOString()}"`,
@@ -42,7 +40,7 @@ export async function GET() {
       status: 200,
       headers: {
         "Content-Type": "text/csv; charset=utf-8",
-        "Content-Disposition": `attachment; filename=wezard-whitelist-${Date.now()}.csv`,
+        "Content-Disposition": `attachment; filename=wezards-whitelist-${Date.now()}.csv`,
       },
     });
   } catch (error) {

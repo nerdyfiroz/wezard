@@ -42,7 +42,6 @@ export default function AdminTasksPage() {
   const handleSaveTask = async (taskData: Partial<Task>) => {
     try {
       if (editingTask) {
-        // Update
         const res = await fetch(`/api/admin/tasks/${editingTask.id}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
@@ -50,7 +49,6 @@ export default function AdminTasksPage() {
         });
         if (res.ok) fetchTasks();
       } else {
-        // Create
         const res = await fetch("/api/admin/tasks", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -116,7 +114,6 @@ export default function AdminTasksPage() {
                   <th className="py-3.5 px-4">Order</th>
                   <th className="py-3.5 px-4">Task Title</th>
                   <th className="py-3.5 px-4">Type</th>
-                  <th className="py-3.5 px-4">Points</th>
                   <th className="py-3.5 px-4">Requirement</th>
                   <th className="py-3.5 px-4">Status</th>
                   <th className="py-3.5 px-4 text-right">Actions</th>
@@ -143,7 +140,6 @@ export default function AdminTasksPage() {
                       </div>
                     </td>
                     <td className="py-3.5 px-4 font-mono text-cyan-400">{t.type}</td>
-                    <td className="py-3.5 px-4 font-mono font-bold text-amber-400">{t.points} PTS</td>
                     <td className="py-3.5 px-4">
                       {t.required ? (
                         <span className="px-2 py-0.5 text-[10px] font-mono font-semibold rounded bg-emerald-500/10 text-fintech-green border border-fintech-green/20">

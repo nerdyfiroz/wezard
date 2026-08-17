@@ -9,14 +9,13 @@ export const admins = pgTable("admins", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
-// Tasks (Quests) Table
+// Tasks (Quests) Table - Points removed per user request
 export const tasks = pgTable("tasks", {
   id: uuid("id").defaultRandom().primaryKey(),
   title: varchar("title", { length: 255 }).notNull(),
   description: text("description").notNull(),
-  type: varchar("type", { length: 50 }).notNull(), // x_follow, x_like, x_repost, discord_join, telegram_join, submit_wallet, custom
+  type: varchar("type", { length: 50 }).notNull(), // x_follow, x_like, x_repost, visit_url, submit_wallet, custom
   url: text("url"),
-  points: integer("points").default(10).notNull(),
   required: boolean("required").default(true).notNull(),
   verificationType: varchar("verification_type", { length: 50 }).default("url").notNull(), // manual, url, api
   active: boolean("active").default(true).notNull(),
@@ -25,14 +24,12 @@ export const tasks = pgTable("tasks", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
-// Whitelist Entries Table
+// Whitelist Entries Table - Simplified per user request (Wallet + Task Proofs, no Discord/Telegram/Referral)
 export const whitelistEntries = pgTable("whitelist_entries", {
   id: uuid("id").defaultRandom().primaryKey(),
   walletAddress: varchar("wallet_address", { length: 42 }).notNull(),
-  discordUsername: varchar("discord_username", { length: 100 }).notNull(),
-  twitterUsername: varchar("twitter_username", { length: 100 }).notNull(),
+  proofDetails: text("proof_details"), // Proof text/handles submitted by user
   email: varchar("email", { length: 255 }),
-  referralCode: varchar("referral_code", { length: 50 }),
   status: varchar("status", { length: 20 }).default("pending").notNull(), // pending, approved, rejected
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
@@ -47,6 +44,7 @@ export const taskCompletions = pgTable("task_completions", {
   taskId: uuid("task_id")
     .references(() => tasks.id, { onDelete: "cascade" })
     .notNull(),
+  proofUrl: text("proof_url"),
   status: varchar("status", { length: 20 }).default("completed").notNull(),
   verifiedAt: timestamp("verified_at", { withTimezone: true }).defaultNow().notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),

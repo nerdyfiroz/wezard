@@ -57,7 +57,7 @@ export default function AdminLoginPage() {
               <Sparkles className="w-6 h-6 text-fintech-green" />
             </div>
           </div>
-          <h1 className="font-display font-bold text-2xl text-white">WeZard Sanctum</h1>
+          <h1 className="font-display font-bold text-2xl text-white">WeZards Sanctum</h1>
           <p className="text-xs text-fintech-subtext mt-1 font-mono">Restricted Admin Authentication</p>
         </div>
 

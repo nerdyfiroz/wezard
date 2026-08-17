@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { CheckCircle2, ExternalLink, Twitter, MessageSquare, Send, Wallet, Sparkles, Circle } from "lucide-react";
+import { CheckCircle2, ExternalLink, Twitter, Sparkles, Circle, Globe, Wallet } from "lucide-react";
 import { Task } from "@/lib/db/schema";
 
 interface TaskItemProps {
@@ -17,10 +17,8 @@ export function TaskItem({ task, isCompleted, onToggleComplete }: TaskItemProps)
       case "x_like":
       case "x_repost":
         return <Twitter className="w-4 h-4 text-cyan-400" />;
-      case "discord_join":
-        return <MessageSquare className="w-4 h-4 text-indigo-400" />;
-      case "telegram_join":
-        return <Send className="w-4 h-4 text-sky-400" />;
+      case "visit_url":
+        return <Globe className="w-4 h-4 text-purple-400" />;
       case "submit_wallet":
         return <Wallet className="w-4 h-4 text-fintech-green" />;
       default:
@@ -74,10 +72,6 @@ export function TaskItem({ task, isCompleted, onToggleComplete }: TaskItemProps)
                 OPTIONAL
               </span>
             )}
-
-            <span className="px-2 py-0.5 text-[10px] font-mono rounded bg-arcane-purple/10 text-purple-300 border border-purple-500/20">
-              +{task.points} PTS
-            </span>
           </div>
 
           <p className="text-xs text-fintech-subtext mt-1 leading-relaxed">{task.description}</p>

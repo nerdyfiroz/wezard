@@ -17,7 +17,7 @@ export function Navbar({ onOpenQuests }: { onOpenQuests: () => void }) {
           </div>
           <div className="flex flex-col">
             <span className="font-display font-extrabold tracking-widest text-lg bg-clip-text text-transparent bg-gradient-to-r from-white via-slate-200 to-emerald-400">
-              WEZARD
+              WEZARDS
             </span>
             <span className="text-[10px] tracking-widest text-fintech-subtext font-mono uppercase -mt-1">
               CIRCLE QUEST

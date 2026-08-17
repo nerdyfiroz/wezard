@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { whitelistSubmitSchema } from "@/lib/validation/schemas";
-import { verifyTurnstileToken } from "@/lib/captcha/turnstile";
+import { verifyMathCaptcha } from "@/lib/captcha/math-captcha";
 import { checkRateLimit } from "@/lib/security/rate-limit";
 import { db, isDbConfigured, memoryStore } from "@/lib/db";
 import { whitelistEntries, tasks, taskCompletions } from "@/lib/db/schema";
-import { eq, or, and } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 
 export async function POST(req: NextRequest) {
   try {
@@ -27,23 +27,23 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: firstError }, { status: 400 });
     }
 
-    const { walletAddress, discordUsername, twitterUsername, email, referralCode, completedTaskIds, captchaToken } =
-      validation.data;
+    const { walletAddress, proofDetails, email, completedTaskIds, mathChallengeId, mathAnswer } = validation.data;
 
-    // 3. CAPTCHA Server Verification
-    const captchaResult = await verifyTurnstileToken(captchaToken, clientIp);
+    // 3. Math CAPTCHA Server Verification
+    const captchaResult = verifyMathCaptcha(mathChallengeId, mathAnswer);
     if (!captchaResult.success) {
-      return NextResponse.json({ error: captchaResult.error || "Please complete the CAPTCHA verification." }, { status: 400 });
+      return NextResponse.json({ error: captchaResult.error || "Math CAPTCHA verification failed." }, { status: 400 });
     }
 
     const normalizedWallet = walletAddress.toLowerCase();
-    const normalizedTwitter = twitterUsername.toLowerCase();
-    const normalizedDiscord = discordUsername.toLowerCase();
 
     // 4. Server-Side Verification: Ensure 100% of REQUIRED tasks are completed
     let requiredTaskIds: string[] = [];
     if (isDbConfigured && db) {
-      const dbRequiredTasks = await db.select({ id: tasks.id }).from(tasks).where(and(eq(tasks.active, true), eq(tasks.required, true)));
+      const dbRequiredTasks = await db
+        .select({ id: tasks.id })
+        .from(tasks)
+        .where(and(eq(tasks.active, true), eq(tasks.required, true)));
       requiredTaskIds = dbRequiredTasks.map((t) => t.id);
     } else {
       requiredTaskIds = memoryStore
@@ -60,39 +60,18 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 5. Check duplicate wallet & duplicate social handles
+    // 5. Check duplicate wallet
     if (isDbConfigured && db) {
       const existing = await db
         .select()
         .from(whitelistEntries)
-        .where(
-          or(
-            eq(whitelistEntries.walletAddress, normalizedWallet),
-            eq(whitelistEntries.twitterUsername, normalizedTwitter),
-            eq(whitelistEntries.discordUsername, normalizedDiscord)
-          )
-        );
+        .where(eq(whitelistEntries.walletAddress, normalizedWallet));
 
       if (existing.length > 0) {
-        const match = existing[0];
-        if (match.walletAddress === normalizedWallet) {
-          return NextResponse.json(
-            { error: "That wallet has already joined the WeZard whitelist." },
-            { status: 400 }
-          );
-        }
-        if (match.twitterUsername === normalizedTwitter) {
-          return NextResponse.json(
-            { error: "That X/Twitter account has already been registered." },
-            { status: 400 }
-          );
-        }
-        if (match.discordUsername === normalizedDiscord) {
-          return NextResponse.json(
-            { error: "That Discord handle has already been registered." },
-            { status: 400 }
-          );
-        }
+        return NextResponse.json(
+          { error: "That wallet address has already joined the WeZards whitelist." },
+          { status: 400 }
+        );
       }
 
       // Insert into PostgreSQL
@@ -100,15 +79,13 @@ export async function POST(req: NextRequest) {
         .insert(whitelistEntries)
         .values({
           walletAddress: normalizedWallet,
-          discordUsername: normalizedDiscord,
-          twitterUsername: normalizedTwitter,
+          proofDetails: proofDetails || "",
           email: email || "",
-          referralCode: referralCode || "",
           status: "pending",
         })
         .returning();
 
-      // Insert completions
+      // Insert task completions
       if (completedTaskIds.length > 0) {
         await db.insert(taskCompletions).values(
           completedTaskIds.map((taskId) => ({
@@ -128,31 +105,15 @@ export async function POST(req: NextRequest) {
       // Memory Store logic
       if (memoryStore.findEntryByWallet(normalizedWallet)) {
         return NextResponse.json(
-          { error: "That wallet has already joined the WeZard whitelist." },
-          { status: 400 }
-        );
-      }
-
-      if (memoryStore.findEntryByTwitter(normalizedTwitter)) {
-        return NextResponse.json(
-          { error: "That X/Twitter account has already been registered." },
-          { status: 400 }
-        );
-      }
-
-      if (memoryStore.findEntryByDiscord(normalizedDiscord)) {
-        return NextResponse.json(
-          { error: "That Discord handle has already been registered." },
+          { error: "That wallet address has already joined the WeZards whitelist." },
           { status: 400 }
         );
       }
 
       const newEntry = memoryStore.addEntry({
         walletAddress: normalizedWallet,
-        discordUsername: normalizedDiscord,
-        twitterUsername: normalizedTwitter,
+        proofDetails,
         email,
-        referralCode,
         completedTaskIds,
       });
 
