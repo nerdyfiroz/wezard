@@ -1,33 +1,30 @@
-type RateLimitRecord = {
-  count: number;
-  resetAt: number;
-};
-
-const rateLimitMap = new Map<string, RateLimitRecord>();
+// In-memory submission counter per IP address
+const ipSubmissionMap = new Map<string, number>();
 
 /**
- * Basic in-memory rate limiter.
- * @param key Identifier (e.g., IP address or route name)
- * @param limit Max allowed requests within window
- * @param windowMs Time window in milliseconds
+ * Get current successful whitelist submission count for an IP address.
  */
-export function checkRateLimit(key: string, limit: number = 10, windowMs: number = 60000): { allowed: boolean; remaining: number } {
-  const now = Date.now();
-  const record = rateLimitMap.get(key);
+export function getIpSubmissionCount(ip: string): number {
+  return ipSubmissionMap.get(ip) || 0;
+}
 
-  // Clean up expired entry
-  if (!record || now > record.resetAt) {
-    rateLimitMap.set(key, {
-      count: 1,
-      resetAt: now + windowMs,
-    });
-    return { allowed: true, remaining: limit - 1 };
-  }
+/**
+ * Increment whitelist submission count for an IP address.
+ */
+export function incrementIpSubmissionCount(ip: string): number {
+  const current = ipSubmissionMap.get(ip) || 0;
+  const updated = current + 1;
+  ipSubmissionMap.set(ip, updated);
+  return updated;
+}
 
-  if (record.count >= limit) {
-    return { allowed: false, remaining: 0 };
-  }
-
-  record.count += 1;
-  return { allowed: true, remaining: limit - record.count };
+/**
+ * Check if IP is allowed to submit (Max 3 submissions per IP).
+ */
+export function canIpSubmit(ip: string, maxSubmissions: number = 3): { allowed: boolean; currentCount: number } {
+  const currentCount = getIpSubmissionCount(ip);
+  return {
+    allowed: currentCount < maxSubmissions,
+    currentCount,
+  };
 }
