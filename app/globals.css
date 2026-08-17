@@ -4,7 +4,11 @@
 
 @layer base {
   body {
-    @apply bg-obsidian text-slate-100 font-sans antialiased selection:bg-fintech-green selection:text-obsidian;
+    @apply bg-obsidian text-slate-100 font-pixel antialiased selection:bg-amber-400 selection:text-obsidian;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display tracking-wider;
   }
 }
 
@@ -24,5 +28,5 @@
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #10B981;
+  background: #F59E0B;
 }

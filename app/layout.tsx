@@ -1,16 +1,17 @@
 import type { Metadata } from "next";
-import { Inter, Outfit } from "next/font/google";
+import { Pixelify_Sans, Silkscreen } from "next/font/google";
 import "./globals.css";
 
-const inter = Inter({
+const pixelify = Pixelify_Sans({
   subsets: ["latin"],
-  variable: "--font-inter",
+  variable: "--font-pixel",
   display: "swap",
 });
 
-const outfit = Outfit({
+const silkscreen = Silkscreen({
+  weight: ["400", "700"],
   subsets: ["latin"],
-  variable: "--font-outfit",
+  variable: "--font-silkscreen",
   display: "swap",
 });
 
@@ -41,8 +42,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${inter.variable} ${outfit.variable} dark`}>
-      <body className="bg-obsidian text-slate-100 font-sans antialiased">
+    <html lang="en" className={`${pixelify.variable} ${silkscreen.variable} dark`}>
+      <body className="bg-obsidian text-slate-100 font-pixel antialiased">
         {children}
       </body>
     </html>
