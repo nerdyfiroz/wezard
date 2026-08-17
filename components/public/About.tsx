@@ -24,8 +24,8 @@ const STATS = [
     glow: "shadow-purple-500/10",
   },
   {
-    value: "100%",
-    label: "Hand-crafted",
+    value: "200+",
+    label: "Traits",
     icon: <Wand2 className="w-5 h-5" />,
     color: "text-arcane-cyan",
     border: "border-cyan-500/20",

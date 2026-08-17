@@ -55,8 +55,8 @@ export async function POST(req: NextRequest) {
         .values({
           id: entryId,
           walletAddress: normalizedWallet,
-          twitterUsername: normalizedTwitter,
-          replyCommentLink,
+          twitterUsername: normalizedTwitter || `@${normalizedWallet.slice(2, 10)}`,
+          replyCommentLink: replyCommentLink || "Completed via task quest",
           email: email || "",
           status: "pending",
         })

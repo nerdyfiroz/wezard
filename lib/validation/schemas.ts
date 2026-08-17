@@ -13,13 +13,10 @@ export const whitelistSubmitSchema = z.object({
   twitterUsername: z
     .string()
     .trim()
-    .min(2, { message: "X/Twitter username must be at least 2 characters." })
-    .max(50, { message: "X/Twitter handle is too long." })
-    .transform((val) => (val.startsWith("@") ? val : `@${val}`)),
-  replyCommentLink: z
-    .string()
-    .trim()
-    .min(5, { message: "Please provide your X/Twitter reply or comment link." }),
+    .optional()
+    .or(z.literal(""))
+    .transform((val) => (val ? (val.startsWith("@") ? val : `@${val}`) : "")),
+  replyCommentLink: z.string().trim().optional().or(z.literal("")),
   email: z.string().trim().optional().or(z.literal("")),
   completedTaskIds: z.array(z.string()).min(1, { message: "You must complete all required quests." }),
   mathChallengeId: z.string().min(1, { message: "Math CAPTCHA challenge ID is required." }),

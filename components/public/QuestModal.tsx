@@ -2,13 +2,12 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Wallet, ShieldCheck, AlertCircle, Loader2 } from "lucide-react";
+import { X, ShieldCheck, AlertCircle, Loader2 } from "lucide-react";
 import { ProgressBar } from "./ProgressBar";
 import { TaskItem } from "./TaskItem";
 import { MathCaptchaWidget } from "./MathCaptchaWidget";
 import { Task } from "@/lib/db/schema";
 import { evmAddressRegex } from "@/lib/validation/schemas";
-import { XLogo } from "./Navbar";
 
 interface QuestModalProps {
   isOpen: boolean;
@@ -22,17 +21,11 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
   // Per-task proof values: { [taskId]: proofUrl }
   const [taskProofs, setTaskProofs] = useState<Record<string, string>>({});
 
-  const [walletAddress, setWalletAddress] = useState("");
-  const [twitterUsername, setTwitterUsername] = useState("");
-  const [replyCommentLink, setReplyCommentLink] = useState("");
-
   const [mathChallengeId, setMathChallengeId] = useState("");
   const [mathAnswer, setMathAnswer] = useState("");
 
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
-
-  const walletInputRef = useRef<HTMLInputElement | null>(null);
 
   // Fetch active tasks from API
   useEffect(() => {
@@ -56,12 +49,8 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
   const handleVisitTask = (taskId: string, url?: string | null) => {
     if (url && url.trim().length > 0) {
       window.open(url, "_blank", "noopener,noreferrer");
-      setVisitedTaskIds((prev) => (prev.includes(taskId) ? prev : [...prev, taskId]));
-    } else {
-      // No URL: scroll to wallet input
-      walletInputRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
-      walletInputRef.current?.focus();
     }
+    setVisitedTaskIds((prev) => (prev.includes(taskId) ? prev : [...prev, taskId]));
   };
 
   const handleProofChange = (taskId: string, value: string) => {
@@ -69,23 +58,17 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
     if (errorMsg) setErrorMsg("");
   };
 
-  // Determine if form details are filled
-  const isFormFilled = Boolean(
-    walletAddress && evmAddressRegex.test(walletAddress) && twitterUsername.trim() && replyCommentLink.trim()
-  );
-
   // A task is considered "complete" when:
-  // - It's been visited (link opened) OR type is submit_wallet and form filled
+  // - It's been visited OR proof is filled
   // - AND if proofRequired, the proofValue is non-empty
   const isTaskComplete = (task: Task): boolean => {
-    const hasProofBox = Boolean(task.proofLabel && task.proofLabel.trim().length > 0);
-    const proofVal = taskProofs[task.id] || "";
-    const proofOk = !hasProofBox || !task.proofRequired || proofVal.trim().length > 3;
+    const proofVal = (taskProofs[task.id] || "").trim();
+    const hasProof = proofVal.length > 2;
 
-    if (task.type === "submit_wallet") {
-      return isFormFilled && proofOk;
+    if (task.proofRequired) {
+      return hasProof;
     }
-    return visitedTaskIds.includes(task.id) && proofOk;
+    return visitedTaskIds.includes(task.id) || hasProof;
   };
 
   const completedTaskIds = tasks.filter(isTaskComplete).map((t) => t.id);
@@ -99,25 +82,51 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
     e.preventDefault();
     setErrorMsg("");
 
-    // Wallet address validation
-    if (!walletAddress || !evmAddressRegex.test(walletAddress.trim())) {
-      setErrorMsg("Invalid EVM wallet address format. Must start with 0x followed by 40 hex characters (0-9, a-f).");
-      walletInputRef.current?.focus();
+    // 1. Extract EVM wallet address from task proofs or find proof that matches 0x regex
+    let detectedWallet = "";
+    for (const task of tasks) {
+      const val = (taskProofs[task.id] || "").trim();
+      if (task.type === "submit_wallet" || evmAddressRegex.test(val)) {
+        if (evmAddressRegex.test(val)) {
+          detectedWallet = val;
+          break;
+        }
+      }
+    }
+
+    // Fallback: look through all proof values for an EVM address
+    if (!detectedWallet) {
+      const any0x = Object.values(taskProofs).find((v) => evmAddressRegex.test(v.trim()));
+      if (any0x) detectedWallet = any0x.trim();
+    }
+
+    if (!detectedWallet || !evmAddressRegex.test(detectedWallet)) {
+      setErrorMsg("Please enter a valid EVM wallet address (0x...) in the wallet quest proof box.");
       return;
     }
 
-    if (!twitterUsername.trim()) {
-      setErrorMsg("X / Twitter username is required.");
-      return;
+    // 2. Extract Twitter handle from task proofs if available
+    let detectedTwitter = "";
+    for (const task of tasks) {
+      const val = (taskProofs[task.id] || "").trim();
+      if (task.type === "x_follow" || val.startsWith("@") || val.includes("x.com/") || val.includes("twitter.com/")) {
+        detectedTwitter = val;
+        break;
+      }
     }
 
-    if (!replyCommentLink.trim()) {
-      setErrorMsg("Reply or comment link is required.");
-      return;
+    // 3. Extract Reply/Tweet link from task proofs
+    let detectedReplyLink = "";
+    for (const task of tasks) {
+      const val = (taskProofs[task.id] || "").trim();
+      if (task.type === "x_repost" || val.includes("/status/")) {
+        detectedReplyLink = val;
+        break;
+      }
     }
 
     if (!isAllRequiredCompleted) {
-      setErrorMsg("Please complete all required quests (click 'Open Link' and provide proof where required) before submitting.");
+      setErrorMsg("Please complete all required quests and fill the proof boxes before submitting.");
       return;
     }
 
@@ -133,9 +142,9 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          walletAddress: walletAddress.trim(),
-          twitterUsername: twitterUsername.trim(),
-          replyCommentLink: replyCommentLink.trim(),
+          walletAddress: detectedWallet,
+          twitterUsername: detectedTwitter || `@${detectedWallet.slice(2, 10)}`,
+          replyCommentLink: detectedReplyLink || "Completed via task quest",
           completedTaskIds,
           mathChallengeId,
           mathAnswer,
@@ -152,7 +161,7 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
       }
 
       setLoading(false);
-      onSuccess(walletAddress);
+      onSuccess(detectedWallet);
     } catch (err) {
       setLoading(false);
       setErrorMsg("Submission error. Please check your connection and try again.");
@@ -177,7 +186,7 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
                 WeZards Whitelist Quests
               </h3>
               <p className="text-xs sm:text-sm text-amber-200/80 mt-1 font-sans">
-                Complete all required quests and submit your details to reserve your placement.
+                Complete the quests and enter proof details to reserve your placement.
               </p>
             </div>
             <button
@@ -198,10 +207,10 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
               </div>
             )}
 
-            {/* ── 1. Whitelist Quests (each task has its own proof box) ── */}
+            {/* ── Whitelist Quests (each task has its own proof box) ── */}
             <div className="space-y-3 font-sans">
               <h4 className="text-sm sm:text-base font-display font-extrabold uppercase tracking-wider text-amber-300 bg-clip-text text-transparent bg-gradient-to-r from-amber-200 to-yellow-400">
-                1. Whitelist Quests
+                Whitelist Quests
               </h4>
 
               <ProgressBar completedCount={completedRequiredCount} totalCount={requiredTasks.length} />
@@ -211,7 +220,7 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
                   <TaskItem
                     key={task.id}
                     task={task}
-                    isCompleted={visitedTaskIds.includes(task.id) || (task.type === "submit_wallet" && isFormFilled)}
+                    isCompleted={isTaskComplete(task)}
                     proofValue={taskProofs[task.id] || ""}
                     onVisitTask={handleVisitTask}
                     onProofChange={handleProofChange}
@@ -220,102 +229,22 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
               </div>
             </div>
 
-            {/* ── 2. Required Submission Details ── */}
-            <div id="submission-details-section" className="space-y-4 font-sans pt-2 border-t border-fintech-border/50">
-              <h4 className="text-sm sm:text-base font-display font-extrabold uppercase tracking-wider text-amber-300 bg-clip-text text-transparent bg-gradient-to-r from-amber-200 to-yellow-400">
-                2. Required Submission Details
-              </h4>
-
-              <div className="space-y-4">
-                {/* EVM Wallet */}
-                <div>
-                  <label className="block text-xs sm:text-sm text-amber-200 font-bold mb-1.5 font-display tracking-wide">
-                    EVM Wallet Address <span className="text-amber-400">*</span>
-                  </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                      <Wallet className="w-5 h-5" />
-                    </div>
-                    <input
-                      ref={walletInputRef}
-                      id="wallet-input"
-                      type="text"
-                      required
-                      placeholder="0x1234567890abcdef1234567890abcdef12345678"
-                      value={walletAddress}
-                      onChange={(e) => {
-                        setWalletAddress(e.target.value);
-                        if (errorMsg) setErrorMsg("");
-                      }}
-                      className="w-full pl-11 pr-4 py-3 bg-obsidian-light border border-fintech-border rounded-xl text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-400/30 transition-all font-mono"
-                    />
-                  </div>
-                </div>
-
-                {/* Twitter / X Username */}
-                <div>
-                  <label className="block text-xs sm:text-sm text-amber-200 font-bold mb-1.5 font-display tracking-wide">
-                    X / Twitter Username <span className="text-amber-400">*</span>
-                  </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                      <XLogo className="w-5 h-5 text-white" />
-                    </div>
-                    <input
-                      type="text"
-                      required
-                      placeholder="@yourusername"
-                      value={twitterUsername}
-                      onChange={(e) => {
-                        setTwitterUsername(e.target.value);
-                        if (errorMsg) setErrorMsg("");
-                      }}
-                      className="w-full pl-11 pr-4 py-3 bg-obsidian-light border border-fintech-border rounded-xl text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 transition-colors font-sans"
-                    />
-                  </div>
-                </div>
-
-                {/* Reply or Comment Link */}
-                <div>
-                  <label className="block text-xs sm:text-sm text-amber-200 font-bold mb-1.5 font-display tracking-wide">
-                    Reply or Comment Link <span className="text-amber-400">*</span>
-                  </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-                      </svg>
-                    </div>
-                    <input
-                      type="url"
-                      required
-                      placeholder="https://x.com/We_Zards/status/..."
-                      value={replyCommentLink}
-                      onChange={(e) => {
-                        setReplyCommentLink(e.target.value);
-                        if (errorMsg) setErrorMsg("");
-                      }}
-                      className="w-full pl-11 pr-4 py-3 bg-obsidian-light border border-fintech-border rounded-xl text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 transition-colors font-mono"
-                    />
-                  </div>
-                </div>
-              </div>
+            {/* ── Math CAPTCHA ── */}
+            <div className="pt-2 border-t border-fintech-border/50">
+              <MathCaptchaWidget
+                onChallengeReady={(challengeId, answer) => {
+                  setMathChallengeId(challengeId);
+                  setMathAnswer(answer);
+                }}
+              />
             </div>
 
-            {/* ── 3. Math CAPTCHA ── */}
-            <MathCaptchaWidget
-              onChallengeReady={(challengeId, answer) => {
-                setMathChallengeId(challengeId);
-                setMathAnswer(answer);
-              }}
-            />
-
-            {/* ── 4. Submit Button ── */}
+            {/* ── Submit Button ── */}
             <button
               type="submit"
-              disabled={!isAllRequiredCompleted || !walletAddress || !twitterUsername || !replyCommentLink || !mathAnswer || loading}
+              disabled={!isAllRequiredCompleted || !mathAnswer || loading}
               className={`w-full py-4 px-6 rounded-xl font-display font-extrabold text-sm sm:text-base tracking-wider transition-all duration-200 shadow-xl flex items-center justify-center gap-2 ${
-                isAllRequiredCompleted && walletAddress && twitterUsername && replyCommentLink && mathAnswer && !loading
+                isAllRequiredCompleted && mathAnswer && !loading
                   ? "bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-500 text-obsidian hover:from-yellow-300 hover:to-amber-400 shadow-amber-500/30 cursor-pointer hover:scale-[1.01]"
                   : "bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700"
               }`}
@@ -325,13 +254,13 @@ export function QuestModal({ isOpen, onClose, onSuccess }: QuestModalProps) {
                   <Loader2 className="w-5 h-5 animate-spin" />
                   <span>VERIFYING QUESTS...</span>
                 </>
-              ) : isAllRequiredCompleted && walletAddress && twitterUsername && replyCommentLink && mathAnswer ? (
+              ) : isAllRequiredCompleted && mathAnswer ? (
                 <>
                   <ShieldCheck className="w-5 h-5 stroke-[2.5]" />
                   <span>SUBMIT WHITELIST APPLICATION</span>
                 </>
               ) : (
-                <span>COMPLETE QUESTS & FILL DETAILS ({completedRequiredCount}/{requiredTasks.length})</span>
+                <span>COMPLETE ALL QUEST PROOFS ({completedRequiredCount}/{requiredTasks.length})</span>
               )}
             </button>
           </form>
