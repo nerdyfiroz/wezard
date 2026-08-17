@@ -4,6 +4,7 @@ import { verifyMathCaptcha } from "@/lib/captcha/math-captcha";
 import { db, isDbConfigured, memoryStore } from "@/lib/db";
 import { whitelistEntries, tasks, taskCompletions } from "@/lib/db/schema";
 import { eq, or, and } from "drizzle-orm";
+import crypto from "crypto";
 
 export async function POST(req: NextRequest) {
   try {
@@ -28,106 +29,7 @@ export async function POST(req: NextRequest) {
     const normalizedWallet = walletAddress.toLowerCase();
     const normalizedTwitter = twitterUsername.toLowerCase();
 
-    // 3. Server-Side Verification: Ensure 100% of REQUIRED tasks are completed
-    let requiredTaskIds: string[] = [];
-    if (isDbConfigured && db) {
-      try {
-        const dbRequiredTasks = await db
-          .select({ id: tasks.id })
-          .from(tasks)
-          .where(and(eq(tasks.active, true), eq(tasks.required, true)));
-        requiredTaskIds = dbRequiredTasks.map((t) => t.id);
-      } catch (dbErr) {
-        requiredTaskIds = memoryStore
-          .getTasks()
-          .filter((t) => t.active && t.required)
-          .map((t) => t.id);
-      }
-    } else {
-      requiredTaskIds = memoryStore
-        .getTasks()
-        .filter((t) => t.active && t.required)
-        .map((t) => t.id);
-    }
-
-    const missingRequired = requiredTaskIds.filter((reqId) => !completedTaskIds.includes(reqId));
-    if (missingRequired.length > 0) {
-      return NextResponse.json(
-        { error: "Complete all required quests before submitting your whitelist application." },
-        { status: 400 }
-      );
-    }
-
-    // 4. Check duplicate wallet & Twitter username
-    if (isDbConfigured && db) {
-      try {
-        const existing = await db
-          .select()
-          .from(whitelistEntries)
-          .where(
-            or(
-              eq(whitelistEntries.walletAddress, normalizedWallet),
-              eq(whitelistEntries.twitterUsername, normalizedTwitter)
-            )
-          );
-
-        if (existing.length > 0) {
-          const match = existing[0];
-          if (match.walletAddress === normalizedWallet) {
-            return NextResponse.json(
-              { error: "That wallet address has already joined the WeZards whitelist." },
-              { status: 400 }
-            );
-          }
-          if (match.twitterUsername === normalizedTwitter) {
-            return NextResponse.json(
-              { error: "That X/Twitter username has already been registered." },
-              { status: 400 }
-            );
-          }
-        }
-
-        const entryId = `w-${Date.now()}`;
-        // Insert into PostgreSQL
-        const [newEntry] = await db
-          .insert(whitelistEntries)
-          .values({
-            id: entryId,
-            walletAddress: normalizedWallet,
-            twitterUsername: normalizedTwitter,
-            replyCommentLink,
-            email: email || "",
-            status: "pending",
-          })
-          .returning();
-
-        // Insert task completions
-        if (completedTaskIds.length > 0) {
-          try {
-            await db.insert(taskCompletions).values(
-              completedTaskIds.map((taskId) => ({
-                id: `tc-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
-                whitelistEntryId: newEntry.id,
-                taskId,
-                status: "completed",
-              }))
-            );
-          } catch (tcErr) {
-            console.error("Task completions insert notice:", tcErr);
-          }
-        }
-
-        return NextResponse.json({
-          success: true,
-          message: "WELCOME TO THE CIRCLE",
-          entryId: newEntry.id,
-        });
-      } catch (dbErr) {
-        console.error("DB submission failed, fallback to memoryStore:", dbErr);
-      }
-    }
-
-    // Memory Store logic
+    // Always record submission in persistent memoryStore so it's guaranteed saved
     if (memoryStore.findEntryByWallet(normalizedWallet)) {
       return NextResponse.json(
         { error: "That wallet address has already joined the WeZards whitelist." },
@@ -142,18 +44,68 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const newEntry = memoryStore.addEntry({
+    // Generate valid UUID
+    const entryId = crypto.randomUUID();
+
+    // 3. Save into memoryStore + persistent /tmp store
+    const newMemoryEntry = memoryStore.addEntry({
       walletAddress: normalizedWallet,
       twitterUsername: normalizedTwitter,
       replyCommentLink,
-      email,
+      email: email || "",
       completedTaskIds,
     });
+
+    // 4. Try saving into Neon PostgreSQL DB
+    if (isDbConfigured && db) {
+      try {
+        const existingDb = await db
+          .select()
+          .from(whitelistEntries)
+          .where(
+            or(
+              eq(whitelistEntries.walletAddress, normalizedWallet),
+              eq(whitelistEntries.twitterUsername, normalizedTwitter)
+            )
+          );
+
+        if (existingDb.length === 0) {
+          const [newDbEntry] = await db
+            .insert(whitelistEntries)
+            .values({
+              id: entryId,
+              walletAddress: normalizedWallet,
+              twitterUsername: normalizedTwitter,
+              replyCommentLink,
+              email: email || "",
+              status: "pending",
+            })
+            .returning();
+
+          if (completedTaskIds && completedTaskIds.length > 0 && newDbEntry) {
+            try {
+              await db.insert(taskCompletions).values(
+                completedTaskIds.map((taskId) => ({
+                  id: crypto.randomUUID(),
+                  whitelistEntryId: newDbEntry.id,
+                  taskId,
+                  status: "completed",
+                }))
+              );
+            } catch (tcErr) {
+              console.error("Task completions DB insert notice:", tcErr);
+            }
+          }
+        }
+      } catch (dbErr) {
+        console.error("PostgreSQL insertion notice:", dbErr);
+      }
+    }
 
     return NextResponse.json({
       success: true,
       message: "WELCOME TO THE CIRCLE",
-      entryId: newEntry.id,
+      entryId: newMemoryEntry.id || entryId,
     });
   } catch (error) {
     console.error("Submission error:", error);

@@ -3,6 +3,7 @@ import { neon } from "@neondatabase/serverless";
 import * as schema from "./schema";
 import fs from "fs";
 import path from "path";
+import crypto from "crypto";
 
 const connectionString = process.env.DATABASE_URL;
 export const isDbConfigured = Boolean(connectionString && connectionString.startsWith("postgres"));
@@ -13,7 +14,7 @@ export const db = sql ? drizzle(sql, { schema }) : null;
 // Clean Merged Default Tasks for WeZards
 export const DEFAULT_TASKS: schema.Task[] = [
   {
-    id: "task-1-x-follow-combined",
+    id: "7d9e4a1b-3c2f-4e8a-9b1d-5f6e7a8b9c0d",
     title: "Follow @We_Zards and @SickickZards",
     description: "Follow the official project (@We_Zards) and artist (@SickickZards) accounts on X / Twitter.",
     type: "x_follow",
@@ -26,7 +27,7 @@ export const DEFAULT_TASKS: schema.Task[] = [
     updatedAt: new Date("2026-08-01"),
   },
   {
-    id: "task-2-x-repost",
+    id: "a1b2c3d4-e5f6-4a5b-8c7d-9e0f1a2b3c4d",
     title: "Like, Repost & Comment on WeZards Tweet",
     description: "Engage with the official WeZards announcement post on X / Twitter.",
     type: "x_repost",
@@ -40,20 +41,19 @@ export const DEFAULT_TASKS: schema.Task[] = [
   },
 ];
 
-// Persistent File Path for Serverless Lambdas (/tmp)
-const TMP_TASKS_FILE = path.join(process.env.TMPDIR || "/tmp", "wezard_tasks_v2.json");
+// Persistent File Paths for Serverless Lambdas (/tmp)
+const TMP_TASKS_FILE = path.join(process.env.TMPDIR || "/tmp", "wezard_tasks_v3.json");
+const TMP_ENTRIES_FILE = path.join(process.env.TMPDIR || "/tmp", "wezard_entries_v3.json");
 
 declare global {
   var __WEZARD_TASKS_STORE__: schema.Task[] | undefined;
+  var __WEZARD_ENTRIES_STORE__: schema.WhitelistEntry[] | undefined;
 }
 
 function loadPersistedTasks(): schema.Task[] {
-  // 1. Try globalThis in-memory store
   if (globalThis.__WEZARD_TASKS_STORE__ && globalThis.__WEZARD_TASKS_STORE__.length > 0) {
     return globalThis.__WEZARD_TASKS_STORE__;
   }
-
-  // 2. Try reading from /tmp file store
   try {
     if (fs.existsSync(TMP_TASKS_FILE)) {
       const content = fs.readFileSync(TMP_TASKS_FILE, "utf-8");
@@ -66,8 +66,6 @@ function loadPersistedTasks(): schema.Task[] {
   } catch (err) {
     console.error("Error reading /tmp tasks file:", err);
   }
-
-  // 3. Fallback to DEFAULT_TASKS
   globalThis.__WEZARD_TASKS_STORE__ = [...DEFAULT_TASKS];
   return globalThis.__WEZARD_TASKS_STORE__;
 }
@@ -81,6 +79,41 @@ function savePersistedTasks(tasksList: schema.Task[]) {
   }
 }
 
+function loadPersistedEntries(): schema.WhitelistEntry[] {
+  if (globalThis.__WEZARD_ENTRIES_STORE__) {
+    return globalThis.__WEZARD_ENTRIES_STORE__;
+  }
+  try {
+    if (fs.existsSync(TMP_ENTRIES_FILE)) {
+      const content = fs.readFileSync(TMP_ENTRIES_FILE, "utf-8");
+      const parsed = JSON.parse(content);
+      if (Array.isArray(parsed)) {
+        // Parse ISO dates back to Date objects
+        const formatted = parsed.map((e: any) => ({
+          ...e,
+          createdAt: new Date(e.createdAt),
+          updatedAt: new Date(e.updatedAt),
+        }));
+        globalThis.__WEZARD_ENTRIES_STORE__ = formatted;
+        return formatted;
+      }
+    }
+  } catch (err) {
+    console.error("Error reading /tmp entries file:", err);
+  }
+  globalThis.__WEZARD_ENTRIES_STORE__ = [];
+  return globalThis.__WEZARD_ENTRIES_STORE__;
+}
+
+function savePersistedEntries(entriesList: schema.WhitelistEntry[]) {
+  globalThis.__WEZARD_ENTRIES_STORE__ = entriesList;
+  try {
+    fs.writeFileSync(TMP_ENTRIES_FILE, JSON.stringify(entriesList), "utf-8");
+  } catch (err) {
+    console.error("Error saving to /tmp entries file:", err);
+  }
+}
+
 class MemoryStore {
   tasks: schema.Task[] = [...DEFAULT_TASKS];
   settings: Record<string, any> = {
@@ -90,18 +123,6 @@ class MemoryStore {
     maintenanceMode: false,
     duplicateWalletPolicy: "strict",
   };
-  whitelistEntries: schema.WhitelistEntry[] = [
-    {
-      id: "e-1",
-      walletAddress: "0x71C7656EC7ab88b098defB751B7401B5f6d8976F".toLowerCase(),
-      twitterUsername: "@merlin_wiz",
-      replyCommentLink: "https://x.com/We_Zards/status/123456789",
-      email: "",
-      status: "approved",
-      createdAt: new Date("2026-08-10"),
-      updatedAt: new Date("2026-08-10"),
-    },
-  ];
   taskCompletions: schema.TaskCompletion[] = [];
 
   getTasks(): schema.Task[] {
@@ -119,7 +140,7 @@ class MemoryStore {
     const list = loadPersistedTasks();
     const newTask: schema.Task = {
       ...task,
-      id: `task-${Date.now()}`,
+      id: crypto.randomUUID(),
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -153,17 +174,20 @@ class MemoryStore {
     return true;
   }
 
-  getEntries() {
-    return this.whitelistEntries.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  getEntries(): schema.WhitelistEntry[] {
+    const list = loadPersistedEntries();
+    return list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   }
 
   findEntryByWallet(wallet: string) {
-    return this.whitelistEntries.find((e) => e.walletAddress.toLowerCase() === wallet.toLowerCase());
+    const list = loadPersistedEntries();
+    return list.find((e) => e.walletAddress.toLowerCase() === wallet.toLowerCase());
   }
 
   findEntryByTwitter(handle: string) {
+    const list = loadPersistedEntries();
     const clean = handle.replace("@", "").toLowerCase();
-    return this.whitelistEntries.find((e) => e.twitterUsername.replace("@", "").toLowerCase() === clean);
+    return list.find((e) => e.twitterUsername.replace("@", "").toLowerCase() === clean);
   }
 
   addEntry(data: {
@@ -173,7 +197,8 @@ class MemoryStore {
     email?: string;
     completedTaskIds: string[];
   }) {
-    const id = `w-${Date.now()}`;
+    const list = loadPersistedEntries();
+    const id = crypto.randomUUID();
     const newEntry: schema.WhitelistEntry = {
       id,
       walletAddress: data.walletAddress.toLowerCase(),
@@ -184,11 +209,12 @@ class MemoryStore {
       createdAt: new Date(),
       updatedAt: new Date(),
     };
-    this.whitelistEntries.push(newEntry);
+    list.push(newEntry);
+    savePersistedEntries(list);
 
     for (const taskId of data.completedTaskIds) {
       this.taskCompletions.push({
-        id: `tc-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+        id: crypto.randomUUID(),
         whitelistEntryId: id,
         taskId,
         proofUrl: "",
@@ -202,18 +228,22 @@ class MemoryStore {
   }
 
   updateEntryStatus(id: string, status: "pending" | "approved" | "rejected") {
-    const entry = this.whitelistEntries.find((e) => e.id === id);
+    const list = loadPersistedEntries();
+    const entry = list.find((e) => e.id === id);
     if (entry) {
       entry.status = status;
       entry.updatedAt = new Date();
+      savePersistedEntries(list);
     }
     return entry;
   }
 
   deleteEntry(id: string) {
-    const index = this.whitelistEntries.findIndex((e) => e.id === id);
+    const list = loadPersistedEntries();
+    const index = list.findIndex((e) => e.id === id);
     if (index !== -1) {
-      this.whitelistEntries.splice(index, 1);
+      list.splice(index, 1);
+      savePersistedEntries(list);
       this.taskCompletions = this.taskCompletions.filter((tc) => tc.whitelistEntryId !== id);
       return true;
     }
