@@ -1,0 +1,28 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-obsidian text-slate-100 font-sans antialiased selection:bg-fintech-green selection:text-obsidian;
+  }
+}
+
+/* Custom sleek scrollbars for Robinhood UI aesthetic */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #090C10;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1C2638;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #10B981;
+}
