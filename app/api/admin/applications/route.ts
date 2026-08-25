@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminSessionFromCookies } from "@/lib/auth/session";
-import { getEntries } from "@/lib/db";
+import { getPaginatedEntries } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -13,29 +13,22 @@ export async function GET(req: NextRequest) {
 
   try {
     const { searchParams } = new URL(req.url);
-    const search = searchParams.get("search")?.toLowerCase() || "";
+    const search = searchParams.get("search") || "";
     const status = searchParams.get("status") || "all";
+    const page = parseInt(searchParams.get("page") || "1", 10);
+    const limit = parseInt(searchParams.get("limit") || "50", 10);
 
-    let entries = await getEntries();
+    const result = await getPaginatedEntries({
+      page,
+      limit,
+      search,
+      status,
+    });
 
-    if (status !== "all") {
-      entries = entries.filter((e: any) => e.status === status);
-    }
-
-    if (search) {
-      entries = entries.filter(
-        (e: any) =>
-          (e.walletAddress && e.walletAddress.toLowerCase().includes(search)) ||
-          (e.twitterUsername && e.twitterUsername.toLowerCase().includes(search)) ||
-          (e.replyCommentLink && e.replyCommentLink.toLowerCase().includes(search)) ||
-          (e.email && e.email.toLowerCase().includes(search)) ||
-          (e.ipAddress && e.ipAddress.toLowerCase().includes(search))
-      );
-    }
-
-    return NextResponse.json({ applications: entries });
+    return NextResponse.json(result);
   } catch (error) {
     console.error("Error fetching applications:", error);
     return NextResponse.json({ error: "Failed to fetch applications" }, { status: 500 });
   }
 }
+

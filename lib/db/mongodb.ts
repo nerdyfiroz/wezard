@@ -64,6 +64,23 @@ if (isMongoConfigured && MongoClientClass) {
   }
 }
 
+let indexesCreated = false;
+async function ensureIndexes(dbInstance: any) {
+  if (indexesCreated || !dbInstance) return;
+  try {
+    const col = dbInstance.collection("whitelist_entries");
+    await Promise.all([
+      col.createIndex({ createdAt: -1 }),
+      col.createIndex({ walletAddress: 1 }),
+      col.createIndex({ status: 1 }),
+      col.createIndex({ twitterUsername: 1 }),
+    ]);
+    indexesCreated = true;
+  } catch (e) {
+    // Indexes already exist or not authorized
+  }
+}
+
 export async function getMongoDb(): Promise<any | null> {
   if (!isMongoConfigured) return null;
 
@@ -100,8 +117,9 @@ export async function getMongoDb(): Promise<any | null> {
 
   try {
     const connectedClient = await clientPromise;
-    // Always specify the DB name explicitly so we never fall back to 'test'
-    return DB_NAME ? connectedClient.db(DB_NAME) : connectedClient.db();
+    const dbInstance = DB_NAME ? connectedClient.db(DB_NAME) : connectedClient.db();
+    ensureIndexes(dbInstance).catch(() => {});
+    return dbInstance;
   } catch (e) {
     console.error("[MongoDB] Connection failed:", e);
     // Reset so the next call retries the connection
@@ -110,3 +128,4 @@ export async function getMongoDb(): Promise<any | null> {
     return null;
   }
 }
+

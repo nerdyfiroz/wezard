@@ -394,6 +394,120 @@ export async function findEntryByTwitter(handle: string) {
   return null;
 }
 
+export async function getPaginatedEntries(options: {
+  page?: number;
+  limit?: number;
+  search?: string;
+  status?: string;
+}) {
+  const page = Math.max(1, Number(options.page) || 1);
+  const limit = Math.min(100, Math.max(1, Number(options.limit) || 50));
+  const skip = (page - 1) * limit;
+  const search = (options.search || "").trim();
+  const status = options.status || "all";
+
+  // 1. MongoDB
+  if (isMongoConfigured) {
+    const mongo = await getMongoDb();
+    if (mongo) {
+      const col = mongo.collection("whitelist_entries");
+      const filter: any = {};
+      if (status && status !== "all") {
+        filter.status = status;
+      }
+      if (search) {
+        const safeSearch = search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        filter.$or = [
+          { walletAddress: { $regex: safeSearch, $options: "i" } },
+          { twitterUsername: { $regex: safeSearch, $options: "i" } },
+          { replyCommentLink: { $regex: safeSearch, $options: "i" } },
+          { email: { $regex: safeSearch, $options: "i" } },
+          { ipAddress: { $regex: safeSearch, $options: "i" } },
+        ];
+      }
+
+      const [entries, total] = await Promise.all([
+        col
+          .find(filter)
+          .sort({ createdAt: -1 })
+          .skip(skip)
+          .limit(limit)
+          .toArray(),
+        col.countDocuments(filter),
+      ]);
+
+      const formatted = entries.map((e: any) => ({
+        id: e.id || e._id?.toString(),
+        walletAddress: e.walletAddress || "",
+        twitterUsername: e.twitterUsername || "",
+        replyCommentLink: e.replyCommentLink || "",
+        email: e.email || "",
+        status: e.status || "pending",
+        taskProofs: e.taskProofs || {},
+        completedTaskIds: e.completedTaskIds || [],
+        ipAddress: e.ipAddress || "",
+        createdAt: e.createdAt ? new Date(e.createdAt) : new Date(),
+        updatedAt: e.updatedAt ? new Date(e.updatedAt) : new Date(),
+      }));
+
+      return {
+        applications: formatted,
+        total,
+        page,
+        totalPages: Math.ceil(total / limit) || 1,
+        limit,
+      };
+    }
+    console.error("[getPaginatedEntries] isMongoConfigured=true but getMongoDb() returned null");
+  }
+
+  // 2. PostgreSQL
+  if (isPgConfigured && db) {
+    try {
+      const all = await db
+        .select()
+        .from(schema.whitelistEntries)
+        .orderBy(schema.whitelistEntries.createdAt);
+
+      let filtered = all;
+      if (status !== "all") {
+        filtered = filtered.filter((e: any) => e.status === status);
+      }
+      if (search) {
+        const s = search.toLowerCase();
+        filtered = filtered.filter(
+          (e: any) =>
+            (e.walletAddress && e.walletAddress.toLowerCase().includes(s)) ||
+            (e.twitterUsername && e.twitterUsername.toLowerCase().includes(s)) ||
+            (e.replyCommentLink && e.replyCommentLink.toLowerCase().includes(s)) ||
+            (e.email && e.email.toLowerCase().includes(s))
+        );
+      }
+
+      const total = filtered.length;
+      const paginated = filtered.slice(skip, skip + limit);
+
+      return {
+        applications: paginated,
+        total,
+        page,
+        totalPages: Math.ceil(total / limit) || 1,
+        limit,
+      };
+    } catch (e) {
+      console.error("[getPaginatedEntries] PG error:", e);
+    }
+  }
+
+  return {
+    applications: [],
+    total: 0,
+    page: 1,
+    totalPages: 1,
+    limit,
+  };
+}
+
 export async function getEntries() {
   if (isMongoConfigured) {
     const mongo = await getMongoDb();
@@ -402,6 +516,7 @@ export async function getEntries() {
         .collection("whitelist_entries")
         .find({})
         .sort({ createdAt: -1 })
+        .limit(1000)
         .toArray();
     }
     console.error("[getEntries] isMongoConfigured=true but getMongoDb() returned null — check MONGODB_URI and network.");
@@ -415,6 +530,7 @@ export async function getEntries() {
   }
   return [];
 }
+
 
 export async function updateEntryStatus(id: string, status: "pending" | "approved" | "rejected") {
   if (isMongoConfigured) {

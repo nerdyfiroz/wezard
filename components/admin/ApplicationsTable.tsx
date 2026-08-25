@@ -1,34 +1,87 @@
 "use client";
 
 import React, { useState } from "react";
-import { Search, CheckCircle2, XCircle, Trash2, Eye, ExternalLink } from "lucide-react";
+import {
+  Search,
+  CheckCircle2,
+  XCircle,
+  Trash2,
+  Eye,
+  ExternalLink,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+  Loader2,
+} from "lucide-react";
 import { WhitelistEntry } from "@/lib/db/schema";
 import { truncateWallet, formatDate } from "@/lib/utils";
 import { ExportButton } from "./ExportButton";
 
 interface ApplicationsTableProps {
   applications: WhitelistEntry[];
+  total: number;
+  page: number;
+  totalPages: number;
+  limit: number;
+  loading: boolean;
+  statusFilter: "all" | "approved" | "pending" | "rejected";
+  search: string;
+  onPageChange: (newPage: number) => void;
+  onStatusFilterChange: (newStatus: "all" | "approved" | "pending" | "rejected") => void;
+  onSearchChange: (newSearch: string) => void;
   onStatusChange: (id: string, status: "pending" | "approved" | "rejected") => void;
   onDelete: (id: string) => void;
 }
 
-export function ApplicationsTable({ applications, onStatusChange, onDelete }: ApplicationsTableProps) {
-  const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"all" | "approved" | "pending" | "rejected">("all");
+export function ApplicationsTable({
+  applications,
+  total,
+  page,
+  totalPages,
+  limit,
+  loading,
+  statusFilter,
+  search,
+  onPageChange,
+  onStatusFilterChange,
+  onSearchChange,
+  onStatusChange,
+  onDelete,
+}: ApplicationsTableProps) {
   const [selectedEntry, setSelectedEntry] = useState<WhitelistEntry | null>(null);
 
-  const filtered = applications.filter((app) => {
-    const matchesStatus = statusFilter === "all" || app.status === statusFilter;
-    const query = search.toLowerCase();
-    const matchesSearch =
-      !search ||
-      app.walletAddress.toLowerCase().includes(query) ||
-      (app.twitterUsername && app.twitterUsername.toLowerCase().includes(query)) ||
-      (app.replyCommentLink && app.replyCommentLink.toLowerCase().includes(query)) ||
-      (app.email && app.email.toLowerCase().includes(query));
+  const startEntry = total === 0 ? 0 : (page - 1) * limit + 1;
+  const endEntry = Math.min(page * limit, total);
 
-    return matchesStatus && matchesSearch;
-  });
+  // Generate page numbers for pagination
+  const getPageNumbers = () => {
+    const pages: (number | string)[] = [];
+    const maxVisible = 5;
+
+    if (totalPages <= maxVisible) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      if (page <= 3) {
+        for (let i = 1; i <= 4; i++) pages.push(i);
+        pages.push("...");
+        pages.push(totalPages);
+      } else if (page >= totalPages - 2) {
+        pages.push(1);
+        pages.push("...");
+        for (let i = totalPages - 3; i <= totalPages; i++) pages.push(i);
+      } else {
+        pages.push(1);
+        pages.push("...");
+        pages.push(page - 1);
+        pages.push(page);
+        pages.push(page + 1);
+        pages.push("...");
+        pages.push(totalPages);
+      }
+    }
+    return pages;
+  };
 
   return (
     <div className="space-y-4">
@@ -39,7 +92,7 @@ export function ApplicationsTable({ applications, onStatusChange, onDelete }: Ap
           {(["all", "approved", "pending", "rejected"] as const).map((st) => (
             <button
               key={st}
-              onClick={() => setStatusFilter(st)}
+              onClick={() => onStatusFilterChange(st)}
               className={`px-3.5 py-1.5 rounded-lg capitalize transition-colors ${
                 statusFilter === st
                   ? "bg-amber-400 text-obsidian font-bold shadow-sm"
@@ -59,7 +112,7 @@ export function ApplicationsTable({ applications, onStatusChange, onDelete }: Ap
               type="text"
               placeholder="Search wallet, Twitter, reply link, or email..."
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => onSearchChange(e.target.value)}
               className="w-full pl-9 pr-4 py-2 bg-fintech-card border border-fintech-border rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 transition-colors font-mono"
             />
           </div>
@@ -69,7 +122,16 @@ export function ApplicationsTable({ applications, onStatusChange, onDelete }: Ap
 
       {/* Table Container */}
       <div className="bg-fintech-card border border-fintech-border rounded-2xl overflow-hidden shadow-xl">
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto relative">
+          {loading && (
+            <div className="absolute inset-0 bg-obsidian/60 backdrop-blur-xs flex items-center justify-center z-10">
+              <div className="flex items-center gap-2 text-fintech-green font-mono text-xs bg-obsidian-light px-4 py-2 rounded-xl border border-fintech-border shadow-lg">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span>Loading entries...</span>
+              </div>
+            </div>
+          )}
+
           <table className="w-full text-left text-xs font-sans">
             <thead className="bg-obsidian-light/80 border-b border-fintech-border text-fintech-subtext font-mono text-[11px] uppercase tracking-wider">
               <tr>
@@ -83,14 +145,14 @@ export function ApplicationsTable({ applications, onStatusChange, onDelete }: Ap
               </tr>
             </thead>
             <tbody className="divide-y divide-fintech-border/50 text-slate-200">
-              {filtered.length === 0 ? (
+              {applications.length === 0 && !loading ? (
                 <tr>
-                  <td colSpan={7} className="py-8 text-center text-slate-500 font-mono">
+                  <td colSpan={7} className="py-12 text-center text-slate-500 font-mono">
                     No whitelist applications found.
                   </td>
                 </tr>
               ) : (
-                filtered.map((app) => (
+                applications.map((app) => (
                   <tr key={app.id} className="hover:bg-obsidian-light/50 transition-colors">
                     <td className="py-3.5 px-4 font-mono font-medium text-white">
                       <a
@@ -180,6 +242,76 @@ export function ApplicationsTable({ applications, onStatusChange, onDelete }: Ap
             </tbody>
           </table>
         </div>
+
+        {/* Pagination Bar */}
+        <div className="p-4 border-t border-fintech-border/60 bg-obsidian-light/50 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+          <div className="text-slate-400 font-mono text-[11px]">
+            Showing <span className="text-white font-bold">{startEntry.toLocaleString()}</span> to{" "}
+            <span className="text-white font-bold">{endEntry.toLocaleString()}</span> of{" "}
+            <span className="text-amber-400 font-bold">{total.toLocaleString()}</span> entries
+          </div>
+
+          {totalPages > 1 && (
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => onPageChange(1)}
+                disabled={page <= 1 || loading}
+                className="p-1.5 rounded-lg bg-fintech-card border border-fintech-border text-slate-400 hover:text-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                title="First Page"
+              >
+                <ChevronsLeft className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => onPageChange(page - 1)}
+                disabled={page <= 1 || loading}
+                className="p-1.5 rounded-lg bg-fintech-card border border-fintech-border text-slate-400 hover:text-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                title="Previous Page"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+
+              <div className="flex items-center gap-1 px-1">
+                {getPageNumbers().map((p, idx) =>
+                  typeof p === "number" ? (
+                    <button
+                      key={idx}
+                      onClick={() => onPageChange(p)}
+                      disabled={loading}
+                      className={`min-w-[32px] h-8 px-2 rounded-lg text-xs font-mono font-bold transition-colors ${
+                        page === p
+                          ? "bg-amber-400 text-obsidian shadow-sm"
+                          : "bg-fintech-card border border-fintech-border text-slate-300 hover:text-white hover:border-slate-500"
+                      }`}
+                    >
+                      {p}
+                    </button>
+                  ) : (
+                    <span key={idx} className="px-1 text-slate-500 font-mono">
+                      {p}
+                    </span>
+                  )
+                )}
+              </div>
+
+              <button
+                onClick={() => onPageChange(page + 1)}
+                disabled={page >= totalPages || loading}
+                className="p-1.5 rounded-lg bg-fintech-card border border-fintech-border text-slate-400 hover:text-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                title="Next Page"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => onPageChange(totalPages)}
+                disabled={page >= totalPages || loading}
+                className="p-1.5 rounded-lg bg-fintech-card border border-fintech-border text-slate-400 hover:text-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                title="Last Page"
+              >
+                <ChevronsRight className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Entry Details Modal */}
@@ -239,3 +371,4 @@ export function ApplicationsTable({ applications, onStatusChange, onDelete }: Ap
     </div>
   );
 }
+
