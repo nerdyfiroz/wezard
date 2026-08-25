@@ -404,6 +404,8 @@ export async function getEntries() {
         .sort({ createdAt: -1 })
         .toArray();
     }
+    console.error("[getEntries] isMongoConfigured=true but getMongoDb() returned null — check MONGODB_URI and network.");
+    return [];
   }
   if (isPgConfigured && db) {
     return await db

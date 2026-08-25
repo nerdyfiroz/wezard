@@ -63,7 +63,7 @@ export function ApplicationsTable({ applications, onStatusChange, onDelete }: Ap
               className="w-full pl-9 pr-4 py-2 bg-fintech-card border border-fintech-border rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 transition-colors font-mono"
             />
           </div>
-          <ExportButton />
+          <ExportButton status={statusFilter} search={search} />
         </div>
       </div>
 

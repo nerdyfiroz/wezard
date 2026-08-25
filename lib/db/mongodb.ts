@@ -4,7 +4,7 @@ let MongoClientClass: any = null;
 try {
   MongoClientClass = require("mongodb").MongoClient;
 } catch {
-  // Module will be resolved at runtime in production (Vercel)
+  // Will be retried dynamically in getMongoDb()
 }
 
 const uri = (
@@ -22,6 +22,27 @@ const uri = (
 export const isMongoConfigured = Boolean(
   uri && (uri.startsWith("mongodb://") || uri.startsWith("mongodb+srv://"))
 );
+
+/**
+ * Extract the database name from the MongoDB URI so that .db() always
+ * connects to the correct database (not the default 'test' db).
+ * e.g. mongodb+srv://...@cluster.net/wezards?... → "wezards"
+ */
+function getDbNameFromUri(mongoUri: string): string | undefined {
+  try {
+    // Path after the host: /dbname?options
+    const withoutScheme = mongoUri.replace(/^mongodb(\+srv)?:\/\//, "");
+    const pathStart = withoutScheme.indexOf("/");
+    if (pathStart === -1) return undefined;
+    const afterSlash = withoutScheme.slice(pathStart + 1);
+    const dbName = afterSlash.split("?")[0].trim();
+    return dbName || undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+const DB_NAME = getDbNameFromUri(uri);
 
 let client: any = null;
 let clientPromise: Promise<any> | null = null;
@@ -45,11 +66,47 @@ if (isMongoConfigured && MongoClientClass) {
 
 export async function getMongoDb(): Promise<any | null> {
   if (!isMongoConfigured) return null;
-  if (!clientPromise && MongoClientClass) {
-    client = new MongoClientClass(uri);
-    clientPromise = client.connect();
+
+  // Retry loading the mongodb module if it failed at module init time
+  if (!MongoClientClass) {
+    try {
+      MongoClientClass = require("mongodb").MongoClient;
+    } catch (e) {
+      console.error("[MongoDB] Failed to load mongodb driver:", e);
+      return null;
+    }
   }
+
+  // Initialize the connection promise if it hasn't been set up yet
+  if (!clientPromise) {
+    try {
+      if (process.env.NODE_ENV === "development") {
+        if (!global._mongoClientPromise) {
+          client = new MongoClientClass(uri);
+          global._mongoClientPromise = client.connect();
+        }
+        clientPromise = global._mongoClientPromise || null;
+      } else {
+        client = new MongoClientClass(uri);
+        clientPromise = client.connect();
+      }
+    } catch (e) {
+      console.error("[MongoDB] Failed to create client:", e);
+      return null;
+    }
+  }
+
   if (!clientPromise) return null;
-  const connectedClient = await clientPromise;
-  return connectedClient.db();
+
+  try {
+    const connectedClient = await clientPromise;
+    // Always specify the DB name explicitly so we never fall back to 'test'
+    return DB_NAME ? connectedClient.db(DB_NAME) : connectedClient.db();
+  } catch (e) {
+    console.error("[MongoDB] Connection failed:", e);
+    // Reset so the next call retries the connection
+    clientPromise = null;
+    client = null;
+    return null;
+  }
 }

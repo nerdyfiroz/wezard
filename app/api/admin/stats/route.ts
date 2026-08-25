@@ -28,6 +28,9 @@ export async function GET() {
           getUnifiedTasks(),
           mongo.collection("task_completions").find({}).toArray(),
         ]);
+      } else {
+        console.error("[stats] isMongoConfigured=true but getMongoDb() returned null — check MONGODB_URI.");
+        allTasks = await getUnifiedTasks();
       }
     } else if (db) {
       // 2. PostgreSQL
