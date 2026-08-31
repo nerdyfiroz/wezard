@@ -113,11 +113,11 @@ export function Navbar({
 
                   {/* Project X */}
                   <a
-                    href="https://x.com/We_Zards"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="flex items-center justify-between p-2.5 rounded-xl hover:bg-amber-400/10 text-slate-200 hover:text-white transition-colors group"
-                  >
+  href="https://x.com/WezardsRH"
+  target="_blank"
+  rel="noreferrer"
+  className="flex items-center justify-between p-2.5 rounded-xl hover:bg-amber-400/10 text-slate-200 hover:text-white transition-colors group"
+>
                     <div className="flex items-center gap-3">
                       <div className="relative w-7 h-7 rounded-lg overflow-hidden border border-amber-400/40 shrink-0">
                         <Image
