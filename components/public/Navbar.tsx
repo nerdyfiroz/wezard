@@ -113,7 +113,7 @@ export function Navbar({
 
                   {/* Project X */}
                   <a
-  href="https://x.com/WezardsRH"
+  href="https://x.com/WeZardsRH"
   target="_blank"
   rel="noreferrer"
   className="flex items-center justify-between p-2.5 rounded-xl hover:bg-amber-400/10 text-slate-200 hover:text-white transition-colors group"
@@ -135,7 +135,7 @@ export function Navbar({
                         </span>
 
                         <span className="text-[10px] text-slate-400 font-mono">
-                          @We_Zards
+                          @WeZardsRH
                         </span>
                       </div>
                     </div>
