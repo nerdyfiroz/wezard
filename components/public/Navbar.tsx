@@ -38,7 +38,7 @@ export function Navbar({
   // OpenSea Collection Link
   const handleOpenSeaClick = () => {
     window.open(
-      "https://opensea.io/collection/wezards-",
+      "https://opensea.io/collection/wezards",
       "_blank",
       "noopener,noreferrer"
     );
